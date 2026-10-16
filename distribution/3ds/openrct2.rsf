@@ -3,192 +3,229 @@ BasicInfo:
   CompanyCode             : "00"
   ProductCode             : "CTR-P-RCT2"
   ContentType             : Application
-  Logo                    : None
+  Logo                    : Homebrew
 
 TitleInfo:
-  UniqueId                : 0xF8C72
   Category                : Application
+  UniqueId                : 0xF8C72
 
 Option:
   UseOnSD                 : true
-  EnableCompress          : true
   FreeProductCode         : true
-  EnableCrypt             : false
   MediaFootPadding        : false
-
-SystemControlInfo:
-  SaveDataSize            : 0KB
-  StackSize               : 0x00040000
+  EnableCrypt             : false
+  EnableCompress          : true
 
 AccessControlInfo:
-  CoreVersion             : 2
-  DescVersion             : 2
-  ReleaseKernelMajor      : "02"
-  ReleaseKernelMinor      : "33"
-  UseExtSaveData          : false
-  ExtSaveDataId           : 0x00000000
-  FileSystemAccess:
-    - DirectSdmc
-    - Core
-    - DirectSdmcWrite
-  IdealProcessor          : 0
-  AffinityMask            : 1
-  Priority                : 16
-  MaxCpu                  : 0x9E
-  HandleTableSize         : 0x200
-  DisableDebug            : false
-  EnableForceDebug        : false
-  CanWriteSharedPage      : true
-  CanUsePrivilegedPriority: false
-  CanUseNonAlphabetAndNumber: true
-  PermitMainFunctionArgument: true
-  CanShareDeviceMemory    : true
-  RunnableOnSleep         : false
-  SpecialMemoryArrange    : true
+  CoreVersion                   : 2
+  DescVersion                   : 2
+  ReleaseKernelMajor            : "02"
+  ReleaseKernelMinor            : "33"
+  UseExtSaveData                : false
 
-  # Process Settings
-  SystemMode              : 64MB
-  SystemModeExt           : Legacy
-  CpuSpeed                : 804MHz
-  EnableL2Cache           : true
-  ServiceAccessControl:
-    - apt:u
-    - hid:USER
-    - hid:SPVR
-    - gsp::Gpu
-    - fs:USER
-    - dsp::DSP
-    - cfg:u
-    - cfg:s
-    - cfg:i
-    - ndm:u
-    - soc:U
-    - ptm:u
-    - ptm:sysm
-    - mic:u
-    - hb:ndsp
+  FileSystemAccess:
+   - DirectSdmc
+   - Core
+   - DirectSdmcWrite
+
+  MemoryType                    : Application
+  SystemMode                    : 64MB
+  IdealProcessor                : 0
+  AffinityMask                  : 1
+  Priority                      : 16
+  MaxCpu                        : 0x9E
+  HandleTableSize               : 0x200
+  DisableDebug                  : false
+  EnableForceDebug              : false
+  CanWriteSharedPage            : true
+  CanUsePrivilegedPriority      : false
+  CanUseNonAlphabetAndNumber    : true
+  PermitMainFunctionArgument    : true
+  CanShareDeviceMemory          : true
+  RunnableOnSleep               : false
+  SpecialMemoryArrange          : true
+
+  SystemModeExt                 : 124MB
+  CpuSpeed                      : 268MHz
+  EnableL2Cache                 : true
+  CanAccessCore2                : true
+
+  IORegisterMapping:
+   - 1ff00000-1ff7ffff
+  MemoryMapping:
+   - 1f000000-1f5fffff:r
+
   SystemCallAccess:
-    sc_01: 0x01
-    sc_02: 0x02
-    sc_03: 0x03
-    sc_04: 0x04
-    sc_05: 0x05
-    sc_06: 0x06
-    sc_07: 0x07
-    sc_08: 0x08
-    sc_09: 0x09
-    sc_0a: 0x0a
-    sc_0b: 0x0b
-    sc_0c: 0x0c
-    sc_0d: 0x0d
-    sc_0e: 0x0e
-    sc_0f: 0x0f
-    sc_10: 0x10
-    sc_11: 0x11
-    sc_12: 0x12
-    sc_13: 0x13
-    sc_14: 0x14
-    sc_15: 0x15
-    sc_16: 0x16
-    sc_17: 0x17
-    sc_18: 0x18
-    sc_19: 0x19
-    sc_1a: 0x1a
-    sc_1b: 0x1b
-    sc_1c: 0x1c
-    sc_1d: 0x1d
-    sc_1e: 0x1e
-    sc_1f: 0x1f
-    sc_20: 0x20
-    sc_21: 0x21
-    sc_22: 0x22
-    sc_23: 0x23
-    sc_24: 0x24
-    sc_25: 0x25
-    sc_26: 0x26
-    sc_27: 0x27
-    sc_28: 0x28
-    sc_29: 0x29
-    sc_2a: 0x2a
-    sc_2b: 0x2b
-    sc_2c: 0x2c
-    sc_2d: 0x2d
-    sc_2e: 0x2e
-    sc_2f: 0x2f
-    sc_30: 0x30
-    sc_31: 0x31
-    sc_32: 0x32
-    sc_33: 0x33
-    sc_34: 0x34
-    sc_35: 0x35
-    sc_36: 0x36
-    sc_37: 0x37
-    sc_38: 0x38
-    sc_39: 0x39
-    sc_3a: 0x3a
-    sc_3b: 0x3b
-    sc_3c: 0x3c
-    sc_3d: 0x3d
-    sc_3e: 0x3e
-    sc_3f: 0x3f
-    sc_40: 0x40
-    sc_41: 0x41
-    sc_42: 0x42
-    sc_43: 0x43
-    sc_44: 0x44
-    sc_45: 0x45
-    sc_46: 0x46
-    sc_47: 0x47
-    sc_48: 0x48
-    sc_49: 0x49
-    sc_4a: 0x4a
-    sc_4b: 0x4b
-    sc_4c: 0x4c
-    sc_4d: 0x4d
-    sc_4e: 0x4e
-    sc_4f: 0x4f
-    sc_50: 0x50
-    sc_51: 0x51
-    sc_52: 0x52
-    sc_53: 0x53
-    sc_54: 0x54
-    sc_55: 0x55
-    sc_56: 0x56
-    sc_57: 0x57
-    sc_58: 0x58
-    sc_59: 0x59
-    sc_5a: 0x5a
-    sc_5b: 0x5b
-    sc_5c: 0x5c
-    sc_5d: 0x5d
-    sc_5e: 0x5e
-    sc_5f: 0x5f
-    sc_60: 0x60
-    sc_61: 0x61
-    sc_62: 0x62
-    sc_63: 0x63
-    sc_64: 0x64
-    sc_65: 0x65
-    sc_66: 0x66
-    sc_67: 0x67
-    sc_68: 0x68
-    sc_69: 0x69
-    sc_6a: 0x6a
-    sc_6b: 0x6b
-    sc_6c: 0x6c
-    sc_6d: 0x6d
-    sc_6e: 0x6e
-    sc_6f: 0x6f
-    sc_70: 0x70
-    sc_71: 0x71
-    sc_72: 0x72
-    sc_73: 0x73
-    sc_74: 0x74
-    sc_75: 0x75
-    sc_76: 0x76
-    sc_77: 0x77
-    sc_78: 0x78
-    sc_79: 0x79
-    sc_7a: 0x7a
-    sc_7b: 0x7b
-    sc_7c: 0x7c
+    ControlMemory: 1
+    QueryMemory: 2
+    ExitProcess: 3
+    GetProcessAffinityMask: 4
+    SetProcessAffinityMask: 5
+    GetProcessIdealProcessor: 6
+    SetProcessIdealProcessor: 7
+    CreateThread: 8
+    ExitThread: 9
+    SleepThread: 10
+    GetThreadPriority: 11
+    SetThreadPriority: 12
+    GetThreadAffinityMask: 13
+    SetThreadAffinityMask: 14
+    GetThreadIdealProcessor: 15
+    SetThreadIdealProcessor: 16
+    GetCurrentProcessorNumber: 17
+    Run: 18
+    CreateMutex: 19
+    ReleaseMutex: 20
+    CreateSemaphore: 21
+    ReleaseSemaphore: 22
+    CreateEvent: 23
+    SignalEvent: 24
+    ClearEvent: 25
+    CreateTimer: 26
+    SetTimer: 27
+    CancelTimer: 28
+    ClearTimer: 29
+    CreateMemoryBlock: 30
+    MapMemoryBlock: 31
+    UnmapMemoryBlock: 32
+    CreateAddressArbiter: 33
+    ArbitrateAddress: 34
+    CloseHandle: 35
+    WaitSynchronization1: 36
+    WaitSynchronizationN: 37
+    SignalAndWait: 38
+    DuplicateHandle: 39
+    GetSystemTick: 40
+    GetHandleInfo: 41
+    GetSystemInfo: 42
+    GetProcessInfo: 43
+    GetThreadInfo: 44
+    ConnectToPort: 45
+    SendSyncRequest1: 46
+    SendSyncRequest2: 47
+    SendSyncRequest3: 48
+    SendSyncRequest4: 49
+    SendSyncRequest: 50
+    OpenProcess: 51
+    OpenThread: 52
+    GetProcessId: 53
+    GetProcessIdOfThread: 54
+    GetThreadId: 55
+    GetResourceLimit: 56
+    GetResourceLimitLimitValues: 57
+    GetResourceLimitCurrentValues: 58
+    GetThreadContext: 59
+    Break: 60
+    OutputDebugString: 61
+    ControlPerformanceCounter: 62
+    CreatePort: 71
+    CreateSessionToPort: 72
+    CreateSession: 73
+    AcceptSession: 74
+    ReplyAndReceive1: 75
+    ReplyAndReceive2: 76
+    ReplyAndReceive3: 77
+    ReplyAndReceive4: 78
+    ReplyAndReceive: 79
+    BindInterrupt: 80
+    UnbindInterrupt: 81
+    InvalidateProcessDataCache: 82
+    StoreProcessDataCache: 83
+    FlushProcessDataCache: 84
+    StartInterProcessDma: 85
+    StopDma: 86
+    GetDmaState: 87
+    RestartDma: 88
+    DebugActiveProcess: 96
+    BreakDebugProcess: 97
+    TerminateDebugProcess: 98
+    GetProcessDebugEvent: 99
+    ContinueDebugEvent: 100
+    GetProcessList: 101
+    GetThreadList: 102
+    GetDebugThreadContext: 103
+    SetDebugThreadContext: 104
+    QueryDebugProcessMemory: 105
+    ReadProcessMemory: 106
+    WriteProcessMemory: 107
+    SetHardwareBreakPoint: 108
+    GetDebugThreadParam: 109
+    ControlProcessMemory: 112
+    MapProcessMemory: 113
+    UnmapProcessMemory: 114
+    CreateCodeSet: 115
+    CreateProcess: 117
+    TerminateProcess: 118
+    SetProcessResourceLimits: 119
+    CreateResourceLimit: 120
+    SetResourceLimitValues: 121
+    AddCodeSegment: 122
+    Backdoor: 123
+    KernelSetState: 124
+    QueryProcessMemory: 125
+
+  ServiceAccessControl:
+   - APT:U
+   - ac:u
+   - am:net
+   - boss:U
+   - cam:u
+   - cecd:u
+   - cfg:nor
+   - cfg:u
+   - csnd:SND
+   - dsp::DSP
+   - frd:u
+   - fs:USER
+   - gsp::Gpu
+   - gsp::Lcd
+   - hid:USER
+   - ir:rst
+   - ir:u
+   - ir:USER
+   - mcu::HWC
+   - ndm:u
+   - news:s
+   - nwm::EXT
+   - nwm::UDS
+   - ptm:sysm
+   - ptm:u
+   - pxi:dev
+   - soc:U
+   - ssl:C
+   - y2r:u
+
+SystemControlInfo:
+  SaveDataSize: 0KB
+  RemasterVersion: 0
+  StackSize: 0x80000
+
+  Dependency:
+    ac: 0x0004013000002402
+    am: 0x0004013000001502
+    boss: 0x0004013000003402
+    camera: 0x0004013000001602
+    cecd: 0x0004013000002602
+    cfg: 0x0004013000001702
+    codec: 0x0004013000001802
+    csnd: 0x0004013000002702
+    dlp: 0x0004013000002802
+    dsp: 0x0004013000001a02
+    friends: 0x0004013000003202
+    gpio: 0x0004013000001b02
+    gsp: 0x0004013000001c02
+    hid: 0x0004013000001d02
+    i2c: 0x0004013000001e02
+    ir: 0x0004013000003302
+    mcu: 0x0004013000001f02
+    ndm: 0x0004013000002b02
+    news: 0x0004013000003502
+    nim: 0x0004013000002c02
+    nwm: 0x0004013000002d02
+    pdn: 0x0004013000002102
+    ps: 0x0004013000003102
+    ptm: 0x0004013000002202
+    ro: 0x0004013000003702
+    socket: 0x0004013000002e02
+    spi: 0x0004013000002302
+    ssl: 0x0004013000002f02
