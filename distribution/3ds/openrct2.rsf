@@ -6,7 +6,7 @@ BasicInfo:
   Logo                    : None
 
 TitleInfo:
-  UniqueId                : 0xEC700
+  UniqueId                : 0xF8C72
   Category                : Application
 
 Option:
@@ -17,7 +17,7 @@ Option:
   MediaFootPadding        : false
 
 SystemControlInfo:
-  SaveDataSize            : 1MB
+  SaveDataSize            : 0KB
   StackSize               : 0x00040000
 
 AccessControlInfo:
@@ -29,11 +29,24 @@ AccessControlInfo:
   ExtSaveDataId           : 0x00000000
   FileSystemAccess:
     - DirectSdmc
+    - Core
+    - DirectSdmcWrite
   IdealProcessor          : 0
   AffinityMask            : 1
   Priority                : 16
-  MaxCpu                  : 0x80000000
-  HandleTableSize         : 512
+  MaxCpu                  : 0x9E
+  HandleTableSize         : 0x200
+  DisableDebug            : false
+  EnableForceDebug        : false
+  CanWriteSharedPage      : true
+  CanUsePrivilegedPriority: false
+  CanUseNonAlphabetAndNumber: true
+  PermitMainFunctionArgument: true
+  CanShareDeviceMemory    : true
+  RunnableOnSleep         : false
+  SpecialMemoryArrange    : true
+
+  # Process Settings
   SystemMode              : 64MB
   SystemModeExt           : 124MB
   CpuSpeed                : 804MHz
