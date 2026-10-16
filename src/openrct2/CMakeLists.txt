@@ -1,5 +1,5 @@
 # CMAKE project for libopenrct2 (core OpenRCT2 component)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif ()
@@ -18,17 +18,19 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 endif()
 # Third party libraries
-PKG_CHECK_MODULES(JANSSON REQUIRED jansson>=2.5)
-PKG_CHECK_MODULES(LIBZIP REQUIRED libzip>=1.0)
-PKG_CHECK_MODULES(ZLIB REQUIRED zlib)
+if (NOT NINTENDO_3DS)
+    PKG_CHECK_MODULES(JANSSON REQUIRED jansson>=2.5)
+    PKG_CHECK_MODULES(LIBZIP REQUIRED libzip>=1.0)
+    PKG_CHECK_MODULES(ZLIB REQUIRED zlib)
 
-PKG_CHECK_MODULES(PNG libpng>=1.6)
-if (NOT PNG_FOUND)
-    PKG_CHECK_MODULES(PNG libpng16)
+    PKG_CHECK_MODULES(PNG libpng>=1.6)
     if (NOT PNG_FOUND)
-        PKG_CHECK_MODULES(PNG libpng>=1.2)
+        PKG_CHECK_MODULES(PNG libpng16)
         if (NOT PNG_FOUND)
-            PKG_CHECK_MODULES(PNG REQUIRED libpng12)
+            PKG_CHECK_MODULES(PNG libpng>=1.2)
+            if (NOT PNG_FOUND)
+                PKG_CHECK_MODULES(PNG REQUIRED libpng12)
+            endif ()
         endif ()
     endif ()
 endif ()
@@ -52,6 +54,9 @@ endif ()
 file(GLOB_RECURSE OPENRCT2_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
                                         "${CMAKE_CURRENT_LIST_DIR}/*.h"
                                         "${CMAKE_CURRENT_LIST_DIR}/*.hpp")
+if (NOT VITA)
+    list(REMOVE_ITEM OPENRCT2_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/platform/Platform.Vita.cpp")
+endif ()
 if (APPLE)
     file(GLOB_RECURSE OPENRCT2_CORE_MM_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.mm")
     set_source_files_properties(${OPENRCT2_CORE_MM_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++ -fmodules")
@@ -68,7 +73,20 @@ add_library(${PROJECT} ${OPENRCT2_CORE_SOURCES} ${OPENRCT2_CORE_MM_SOURCES} ${RC
 set_target_properties(${PROJECT} PROPERTIES PREFIX "")
 
 # Libraries
-if (STATIC)
+if (NINTENDO_3DS)
+    target_include_directories(${PROJECT} SYSTEM PUBLIC
+        "$ENV{DEVKITPRO}/libctru/include"
+        "$ENV{DEVKITPRO}/portlibs/3ds/include"
+    )
+    target_link_libraries(${PROJECT}
+        "$ENV{DEVKITPRO}/portlibs/3ds/lib/libjansson.a"
+        "$ENV{DEVKITPRO}/portlibs/3ds/lib/libpng16.a"
+        "$ENV{DEVKITPRO}/portlibs/3ds/lib/libminizip.a"
+        "$ENV{DEVKITPRO}/portlibs/3ds/lib/libz.a"
+        "$ENV{DEVKITPRO}/portlibs/3ds/lib/libiconv.a"
+        "$ENV{DEVKITPRO}/libctru/lib/libctru.a"
+    )
+elseif (STATIC)
     target_link_libraries(${PROJECT} ${JANSSON_STATIC_LIBRARIES}
                                      ${PNG_STATIC_LIBRARIES}
                                      ${ZLIB_STATIC_LIBRARIES}
@@ -80,7 +98,7 @@ else ()
                                      ${LIBZIP_LIBRARIES})
 endif ()
 
-if (UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
+if (UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "BSD" AND NOT NINTENDO_3DS)
     # Include libdl for dlopen
     target_link_libraries(${PROJECT} dl)
 endif ()
@@ -104,7 +122,7 @@ if (NOT DISABLE_NETWORK)
     endif ()
 endif ()
 
-if (NOT APPLE AND NOT MINGW AND NOT VITA)
+if (NOT APPLE AND NOT MINGW AND NOT VITA AND NOT NINTENDO_3DS)
     # This is ugly hack to work around https://bugs.launchpad.net/ubuntu/+source/gcc-5/+bug/1568899.
     # Once C++17 is enabled (and thus old compilers are no longer supported, this needs to be gone.
     # We cannot simply detect the _compiler_ version, as the bug exists with the C++ _library_
@@ -125,7 +143,7 @@ if (NOT DISABLE_TTF)
     endif ()
 endif ()
 
-if (UNIX OR STATIC OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
+if (NOT NINTENDO_3DS AND (UNIX OR STATIC OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD"))
     find_library(ICONV_LIBRARIES NAMES iconv libiconv libiconv-2 c)
     target_link_libraries(${PROJECT} ${ICONV_LIBRARIES})
 endif()
@@ -135,10 +153,12 @@ if (HAVE_DISCORD_RPC)
 endif()
 
 # Includes
-target_include_directories(${PROJECT} SYSTEM PRIVATE ${LIBZIP_INCLUDE_DIRS})
-target_include_directories(${PROJECT} PUBLIC ${JANSSON_INCLUDE_DIRS})
-target_include_directories(${PROJECT} PRIVATE ${PNG_INCLUDE_DIRS}
-                                              ${ZLIB_INCLUDE_DIRS})
+if (NOT NINTENDO_3DS)
+    target_include_directories(${PROJECT} SYSTEM PRIVATE ${LIBZIP_INCLUDE_DIRS})
+    target_include_directories(${PROJECT} PUBLIC ${JANSSON_INCLUDE_DIRS})
+    target_include_directories(${PROJECT} PRIVATE ${PNG_INCLUDE_DIRS}
+                                                  ${ZLIB_INCLUDE_DIRS})
+endif ()
 if (NOT DISABLE_HTTP_TWITCH OR NOT DISABLE_NETWORK)
     target_include_directories(${PROJECT} PRIVATE ${LIBCURL_INCLUDE_DIRS})
 endif ()

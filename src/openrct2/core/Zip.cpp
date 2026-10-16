@@ -14,7 +14,28 @@
  *****************************************************************************/
 #pragma endregion
 
-#ifndef __ANDROID__
+#if defined(__3DS__) || defined(DISABLE_LIBZIP)
+#include "IStream.hpp"
+#include "MemoryStream.h"
+#include "Zip.h"
+
+namespace Zip
+{
+    IZipArchive * Open(const utf8 * path, ZIP_ACCESS access)
+    {
+        (void)path;
+        (void)access;
+        throw IOException("Zip archives not supported on this platform.");
+    }
+
+    IZipArchive * TryOpen(const utf8 * path, ZIP_ACCESS access)
+    {
+        (void)path;
+        (void)access;
+        return nullptr;
+    }
+}
+#elif !defined(__ANDROID__)
 #include <zip.h>
 #include "IStream.hpp"
 #include "MemoryStream.h"

@@ -45,6 +45,10 @@ CURSOR_ID CursorRepository::GetCurrentCursor()
 
 void CursorRepository::SetCurrentCursor(CURSOR_ID cursorId)
 {
+#ifdef __3DS__
+    _currentCursor = cursorId;
+    return;
+#endif
 #ifdef __psp2__
     if(cursorId == 0)
         cursorId = CURSOR_UP_ARROW;

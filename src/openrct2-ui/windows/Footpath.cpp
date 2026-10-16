@@ -71,6 +71,36 @@ enum WINDOW_FOOTPATH_WIDGET_IDX
 };
 
 static rct_widget window_footpath_widgets[] = {
+#ifdef __3DS__
+    {WWT_FRAME,    0, 0,   91,  0,   169, 0xFFFFFFFF,                        STR_NONE},
+    {WWT_CAPTION,  0, 1,   90,  1,   14,  STR_FOOTPATHS,                     STR_WINDOW_TITLE_TIP},
+    {WWT_CLOSEBOX, 0, 79,  89,  2,   13,  STR_CLOSE_X,                       STR_CLOSE_WINDOW_TIP},
+    // Type group (compact top row)
+    {WWT_EMPTY,    0, 0,   0,   0,   0,   STR_NONE,                          STR_NONE},
+    {WWT_FLATBTN,  1, 3,   44,  16,  47,  0xFFFFFFFF,                        STR_FOOTPATH_TIP},
+    {WWT_FLATBTN,  1, 47,  88,  16,  47,  0xFFFFFFFF,                        STR_QUEUE_LINE_PATH_TIP},
+
+    // Direction group (4 compact buttons in one row)
+    {WWT_EMPTY,    0, 0,   0,   0,   0,   STR_NONE,                          STR_NONE},
+    {WWT_FLATBTN,  1, 46,  66,  80,  102, SPR_CONSTRUCTION_DIRECTION_NE,     STR_DIRECTION_TIP},
+    {WWT_FLATBTN,  1, 68,  88,  80,  102, SPR_CONSTRUCTION_DIRECTION_SE,     STR_DIRECTION_TIP},
+    {WWT_FLATBTN,  1, 24,  44,  80,  102, SPR_CONSTRUCTION_DIRECTION_SW,     STR_DIRECTION_TIP},
+    {WWT_FLATBTN,  1, 2,   22,  80,  102, SPR_CONSTRUCTION_DIRECTION_NW,     STR_DIRECTION_TIP},
+
+    // Slope group (3 compact buttons in one row)
+    {WWT_EMPTY,    0, 0,   0,   0,   0,   STR_NONE,                          STR_NONE},
+    {WWT_FLATBTN,  1, 6,   31,  104, 127, SPR_RIDE_CONSTRUCTION_SLOPE_DOWN,  STR_SLOPE_DOWN_TIP},
+    {WWT_FLATBTN,  1, 33,  58,  104, 127, SPR_RIDE_CONSTRUCTION_SLOPE_LEVEL, STR_LEVEL_TIP},
+    {WWT_FLATBTN,  1, 60,  85,  104, 127, SPR_RIDE_CONSTRUCTION_SLOPE_UP,    STR_SLOPE_UP_TIP},
+    // Construct & Remove (bottom row of bridge mode)
+    {WWT_FLATBTN,  1, 3,   56,  129, 166, 0xFFFFFFFF,                        STR_CONSTRUCT_THE_SELECTED_FOOTPATH_SECTION_TIP},
+    {WWT_FLATBTN,  1, 59,  88,  135, 160, SPR_DEMOLISH_CURRENT_SECTION,      STR_REMOVE_PREVIOUS_FOOTPATH_SECTION_TIP},
+
+    // Mode group (second row: Ground vs Bridge/Tunnel)
+    {WWT_EMPTY,    0, 0,   0,   0,   0,   0xFFFFFFFF,                        STR_NONE},
+    {WWT_FLATBTN,  1, 5,   43,  49,  77,  SPR_CONSTRUCTION_FOOTPATH_LAND,    STR_CONSTRUCT_FOOTPATH_ON_LAND_TIP},
+    {WWT_FLATBTN,  1, 48,  86,  49,  77,  SPR_CONSTRUCTION_FOOTPATH_BRIDGE,  STR_CONSTRUCT_BRIDGE_OR_TUNNEL_FOOTPATH_TIP},
+#else
     {WWT_FRAME,    0, 0,  105, 0,   380, 0xFFFFFFFF,                        STR_NONE},
     {WWT_CAPTION,  0, 1,  104, 1,   14,  STR_FOOTPATHS,                     STR_WINDOW_TITLE_TIP},
     {WWT_CLOSEBOX, 0, 93, 103, 2,   13,  STR_CLOSE_X,                       STR_CLOSE_WINDOW_TIP},
@@ -98,6 +128,7 @@ static rct_widget window_footpath_widgets[] = {
     {WWT_GROUPBOX, 0, 3,  102, 321, 374, 0xFFFFFFFF,                        STR_NONE},
     {WWT_FLATBTN,  1, 13, 48,  332, 367, SPR_CONSTRUCTION_FOOTPATH_LAND,    STR_CONSTRUCT_FOOTPATH_ON_LAND_TIP},
     {WWT_FLATBTN,  1, 57, 92,  332, 367, SPR_CONSTRUCTION_FOOTPATH_BRIDGE,  STR_CONSTRUCT_BRIDGE_OR_TUNNEL_FOOTPATH_TIP},
+#endif
     {WIDGETS_END},
 };
 
@@ -242,10 +273,17 @@ rct_window * window_footpath_open()
     }
 
     window = window_create(
+#ifdef __3DS__
+        268,
+        296,
+        92,
+        170,
+#else
         0,
         29,
         106,
         381,
+#endif
         &window_footpath_events,
         WC_FOOTPATH,
         0
@@ -632,6 +670,23 @@ static void window_footpath_invalidate(rct_window * w)
     sint32 queueImage = (pathType->flags & FOOTPATH_ENTRY_FLAG_SHOW_ONLY_IN_SCENARIO_EDITOR) ? pathImage : pathImage + 1;
     window_footpath_widgets[WIDX_FOOTPATH_TYPE].image  = pathImage;
     window_footpath_widgets[WIDX_QUEUELINE_TYPE].image = queueImage;
+
+#ifdef __3DS__
+    bool isBridgeMode = (gFootpathConstructionMode == PATH_CONSTRUCTION_MODE_BRIDGE_OR_TUNNEL);
+    sint16 targetHeight = isBridgeMode ? 170 : 82;
+    if (w->height != targetHeight)
+    {
+        gfx_invalidate_screen();
+        w->height = targetHeight;
+        window_footpath_widgets[WIDX_BACKGROUND].bottom = targetHeight - 1;
+    }
+    for (sint32 i = WIDX_DIRECTION_NW; i <= WIDX_REMOVE; i++)
+    {
+        if (i == WIDX_CONSTRUCT)
+            continue;
+        window_footpath_widgets[i].type = isBridgeMode ? WWT_FLATBTN : WWT_EMPTY;
+    }
+#endif
 }
 
 /**

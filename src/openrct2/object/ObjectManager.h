@@ -42,6 +42,7 @@ interface IObjectManager
     virtual void ResetObjects() abstract;
 
     virtual std::vector<const ObjectRepositoryItem *> GetPackableObjects() abstract;
+    virtual void UpdateSceneryGroupIndexes() abstract;
 };
 
 IObjectManager * CreateObjectManager(IObjectRepository * objectRepository);
@@ -54,3 +55,4 @@ void *        object_manager_load_object(const rct_object_entry * entry);
 void          object_manager_unload_objects(const rct_object_entry * entries, size_t count);
 void          object_manager_unload_all_objects();
 rct_string_id object_manager_get_source_game_string(const rct_object_entry * entry);
+void          object_manager_defer_updates(bool defer);

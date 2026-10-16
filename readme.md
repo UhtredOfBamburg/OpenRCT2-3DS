@@ -3,6 +3,8 @@ OpenRCT2 for consoles.
 
 ## Currently available ports:
 - PSVita [installation](#installation-vita) [Control scheme](#control-scheme-vita) [Building](#building-vita)
+- Nintendo 3DS [installation](#installation-3ds) [Control scheme](#control-scheme-3ds) [Building](#building-3ds)
+
 
 ## installation vita:
 - Get data.zip and openrct2.vpk from the releases tab.
@@ -60,7 +62,39 @@ make -j8
 ```
 - And you got the vpk in build-vita!
 
+## installation 3ds:
+- Download `OpenRCT2-3DS-v1.0.0.zip` from the Releases section.
+- Extract the `3ds` folder into the root of your 3DS SD card (so files reside in `sdmc:/3ds/openrct2/`).
+- Copy your PC installation of **RollerCoaster Tycoon 2** into `sdmc:/3ds/openrct2/rct2/` (must contain `Data/`, `ObjData/`, `Scenarios/`, `Tracks/`).
+- *(Optional)* Copy your **RollerCoaster Tycoon 1 Deluxe** installation into `sdmc:/3ds/openrct2/rct1/` to play RCT1 scenarios and tracks!
+- **CIA Installation (Home Menu):** Copy `CIA/openrct2.cia` to `sdmc:/cias/` and install via FBI.
+- **3DSX Installation (Homebrew Launcher):** Launch OpenRCT2 from the Homebrew Launcher.
+- *Note: New Nintendo 3DS / New 2DS XL recommended for 804 MHz CPU mode and 124 MB extended RAM.*
+
+## Control scheme 3ds:
+- **Stylus / Touch:** Full touch interaction, map panning, placing tracks and scenery
+- **Circle Pad / D-Pad:** Move camera around the park
+- **A:** Primary action / Left click
+- **B:** Close active window / Cancel
+- **X:** Toggle viewport mode
+- **Y:** Pause / Resume game simulation
+- **L / R:** Rotate park view 90 degrees
+- **ZL / ZR:** Zoom In / Zoom Out (New 3DS)
+- **C-Stick:** Fine camera pan (New 3DS)
+- **START:** Main Menu / Save game
+
+## Building 3ds
+- Requires devkitARM, makerom, and bannertool.
+- Run:
+```bash
+bash distribution/3ds/build_3ds.sh
+```
+- The script automatically produces `openrct2.3dsx`, `openrct2.smdh`, and `openrct2.cia`.
+
 ## Changelog
+- **Nintendo 3DS Port:** Dual-screen rendering, touch stylus support, New 3DS 804MHz CPU and 124MB RAM extension, CIA & 3DSX builds.
+
+
 - Made sure ORCT2 compiles with latest GCC for both vita and Linux
 - Made sure OpenSSL 3.0 and older can be used to compile network support
 - Network support on PSVita

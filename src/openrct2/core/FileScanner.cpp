@@ -21,7 +21,7 @@
     #include <windows.h>
 #endif
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__3DS__)
     #include <dirent.h>
     #include <sys/types.h>
     #include <sys/stat.h>
@@ -287,7 +287,7 @@ private:
 
 #endif // _WIN32
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__3DS__)
 
 class FileScannerUnix final : public FileScannerBase
 {
@@ -299,6 +299,32 @@ public:
 
     void GetDirectoryChildren(std::vector<DirectoryChild> &children, const std::string &path) override
     {
+#ifdef __3DS__
+        DIR *dir = opendir(path.c_str());
+        if (dir != nullptr)
+        {
+            struct dirent *node;
+            while ((node = readdir(dir)) != nullptr)
+            {
+                if (!String::Equals(node->d_name, ".") &&
+                    !String::Equals(node->d_name, ".."))
+                {
+                    DirectoryChild child;
+                    child.Name = std::string(node->d_name);
+                    if (node->d_type == DT_DIR)
+                    {
+                        child.Type = DIRECTORY_CHILD_TYPE::DC_DIRECTORY;
+                    }
+                    else
+                    {
+                        child.Type = DIRECTORY_CHILD_TYPE::DC_FILE;
+                    }
+                    children.push_back(child);
+                }
+            }
+            closedir(dir);
+        }
+#else
         struct dirent * * namelist;
         sint32 count = scandir(path.c_str(), &namelist, FilterFunc, alphasort);
         if (count > 0)
@@ -316,6 +342,7 @@ public:
             }
             free(namelist);
         }
+#endif
     }
 
 private:
@@ -350,7 +377,16 @@ private:
             utf8 * path = Memory::Allocate<utf8>(pathSize);
             String::Set(path, pathSize, directory);
             Path::Append(path, pathSize, node->d_name);
-#ifndef __psp2__ 
+#if defined(__3DS__)
+            if (node->d_type == DT_UNKNOWN && strchr(node->d_name, '.') == nullptr)
+            {
+                struct stat statInfo;
+                if (stat(path, &statInfo) != -1 && S_ISDIR(statInfo.st_mode))
+                {
+                    result.Type = DIRECTORY_CHILD_TYPE::DC_DIRECTORY;
+                }
+            }
+#elif !defined(__psp2__)
             struct stat statInfo;
             sint32 statRes = stat(path, &statInfo);
             if (statRes != -1)
@@ -373,7 +409,7 @@ private:
     }
 };
 
-#endif // defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#endif // defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__3DS__)
 
 #ifdef __psp2__
 class FileScannerPSP2 final : public FileScannerBase
@@ -442,7 +478,7 @@ IFileScanner * Path::ScanDirectory(const std::string &pattern, bool recurse)
 {
 #ifdef _WIN32
     return new FileScannerWindows(pattern, recurse);
-#elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__3DS__)
     return new FileScannerUnix(pattern, recurse);
 #elif defined(__psp2__)
     return new FileScannerPSP2(pattern, recurse);

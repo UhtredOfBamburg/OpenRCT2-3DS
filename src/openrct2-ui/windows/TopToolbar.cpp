@@ -303,11 +303,20 @@ static colour_t _tertiaryColour;
 rct_window * window_top_toolbar_open()
 {
     rct_window * window = window_create(
+#ifdef __3DS__
+        40, 240,
+        320, (TOP_TOOLBAR_HEIGHT + 1) * 2,
+#else
         0, 0,
         context_get_width(), TOP_TOOLBAR_HEIGHT + 1,
+#endif
         &window_top_toolbar_events,
         WC_TOP_TOOLBAR,
+#ifdef __3DS__
+        WF_NO_AUTO_CLOSE | WF_TRANSPARENT | WF_NO_BACKGROUND
+#else
         WF_STICK_TO_FRONT | WF_TRANSPARENT | WF_NO_BACKGROUND
+#endif
     );
     window->widgets = window_top_toolbar_widgets;
 
@@ -662,8 +671,11 @@ static void window_top_toolbar_dropdown(rct_window *w, rct_widgetindex widgetInd
  */
 static void window_top_toolbar_invalidate(rct_window *w)
 {
-    sint32 x, enabledWidgets, widgetIndex, widgetWidth, firstAlignment;
+    sint32 x, enabledWidgets;
+#ifndef __3DS__
+    sint32 widgetIndex, widgetWidth, firstAlignment;
     rct_widget *widget;
+#endif
 
     // Enable / disable buttons
     window_top_toolbar_widgets[WIDX_PAUSE].type = WWT_TRNBTN;
@@ -755,12 +767,117 @@ static void window_top_toolbar_invalidate(rct_window *w)
         }
     }
 
+#ifdef __3DS__
+    window_top_toolbar_widgets[WIDX_MUTE].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_NETWORK].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_CHEATS].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_DEBUG].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_FASTFORWARD].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_ROTATE].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_ZOOM_IN].type = WWT_EMPTY;
+    window_top_toolbar_widgets[WIDX_ZOOM_OUT].type = WWT_EMPTY;
+#endif
+
     enabledWidgets = 0;
     for (int i = WIDX_PAUSE; i <= WIDX_NETWORK; i++)
         if (window_top_toolbar_widgets[i].type != WWT_EMPTY)
             enabledWidgets |= (1 << i);
     w->enabled_widgets = enabledWidgets;
 
+#ifdef __3DS__
+    // Dual-Row Handheld Toolbar:
+    // Row 1 (y: 0..27): Sistema & Gestão (File, Pause, View, Map, [Sep], Finances, Research, Park, Guests, News)
+    static constexpr const sint32 toolbar_row1_widgets[] = {
+        WIDX_FILE_MENU,
+        WIDX_PAUSE,
+        WIDX_VIEW_MENU,
+        WIDX_MAP,
+        WIDX_SEPARATOR,
+        WIDX_FINANCES,
+        WIDX_RESEARCH,
+        WIDX_PARK,
+        WIDX_GUESTS,
+        WIDX_NEWS,
+    };
+
+    // Row 2 (y: 28..55): Construção & Operação (Rides, Paths, Scenery, [Sep], Land, Water, Clear, [Sep], Rides List, Staff)
+    static constexpr const sint32 toolbar_row2_widgets[] = {
+        WIDX_CONSTRUCT_RIDE,
+        WIDX_PATH,
+        WIDX_SCENERY,
+        WIDX_SEPARATOR,
+        WIDX_LAND,
+        WIDX_WATER,
+        WIDX_CLEAR_SCENERY,
+        WIDX_SEPARATOR,
+        WIDX_RIDES,
+        WIDX_STAFF,
+    };
+
+    // Calculate Row 1 total width
+    sint32 row1_width = 0;
+    for (size_t i = 0; i < Util::CountOf(toolbar_row1_widgets); ++i) {
+        sint32 wIdx = toolbar_row1_widgets[i];
+        if (wIdx == WIDX_SEPARATOR) {
+            row1_width += 6;
+            continue;
+        }
+        if (window_top_toolbar_widgets[wIdx].type != WWT_EMPTY) {
+            row1_width += 30;
+        }
+    }
+
+    // Position Row 1 (centered horizontally on 320 screen)
+    x = Math::Max(0, (320 - row1_width) / 2);
+    for (size_t i = 0; i < Util::CountOf(toolbar_row1_widgets); ++i) {
+        sint32 wIdx = toolbar_row1_widgets[i];
+        if (wIdx == WIDX_SEPARATOR) {
+            x += 6;
+            continue;
+        }
+        rct_widget *wgt = &window_top_toolbar_widgets[wIdx];
+        if (wgt->type == WWT_EMPTY)
+            continue;
+
+        wgt->left = x;
+        wgt->right = x + 29;
+        wgt->top = 0;
+        wgt->bottom = TOP_TOOLBAR_HEIGHT;
+        x += 30;
+    }
+
+    // Calculate Row 2 total width
+    sint32 row2_width = 0;
+    for (size_t i = 0; i < Util::CountOf(toolbar_row2_widgets); ++i) {
+        sint32 wIdx = toolbar_row2_widgets[i];
+        if (wIdx == WIDX_SEPARATOR) {
+            row2_width += 6;
+            continue;
+        }
+        if (window_top_toolbar_widgets[wIdx].type != WWT_EMPTY) {
+            row2_width += 30;
+        }
+    }
+
+    // Position Row 2 (centered horizontally on 320 screen)
+    x = Math::Max(0, (320 - row2_width) / 2);
+    for (size_t i = 0; i < Util::CountOf(toolbar_row2_widgets); ++i) {
+        sint32 wIdx = toolbar_row2_widgets[i];
+        if (wIdx == WIDX_SEPARATOR) {
+            x += 6;
+            continue;
+        }
+        rct_widget *wgt = &window_top_toolbar_widgets[wIdx];
+        if (wgt->type == WWT_EMPTY)
+            continue;
+
+        wgt->left = x;
+        wgt->right = x + 29;
+        wgt->top = TOP_TOOLBAR_HEIGHT + 1;
+        wgt->bottom = (TOP_TOOLBAR_HEIGHT * 2) + 1;
+        x += 30;
+    }
+#else
     // Align left hand side toolbar buttons
     firstAlignment = 1;
     x = 0;
@@ -801,6 +918,7 @@ static void window_top_toolbar_invalidate(rct_window *w)
         widget->left = x;
         firstAlignment = 0;
     }
+#endif
 
     // Footpath button pressed down
     if (window_find_by_class(WC_FOOTPATH) == nullptr)

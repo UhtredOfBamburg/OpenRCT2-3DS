@@ -30,8 +30,16 @@
 #include <openrct2/world/Scenery.h>
 #include <openrct2/world/SmallScenery.h>
 
+#ifdef __3DS__
+#define WINDOW_SCENERY_WIDTH    316
+#define WINDOW_SCENERY_HEIGHT   180
+#define SCENERY_COLUMNS         4
+static bool _sceneryCollapsed = false;
+#else
 #define WINDOW_SCENERY_WIDTH    634
 #define WINDOW_SCENERY_HEIGHT   180
+#define SCENERY_COLUMNS         9
+#endif
 #define SCENERY_BUTTON_WIDTH    66
 #define SCENERY_BUTTON_HEIGHT   80
 #define SCENERY_WINDOW_TABS     (MAX_SCENERY_GROUP_OBJECTS + 1) // The + 1 is for the 'Miscellaneous' tab
@@ -422,8 +430,13 @@ rct_window * window_scenery_open()
     window_scenery_init();
 
     window = window_create(
+#ifdef __3DS__
+        42,
+        253,
+#else
         context_get_width() - WINDOW_SCENERY_WIDTH,
         0x1D,
+#endif
         WINDOW_SCENERY_WIDTH,
         WINDOW_SCENERY_HEIGHT,
         &window_scenery_events,
@@ -482,6 +495,9 @@ rct_window * window_scenery_open()
     window->max_width = WINDOW_SCENERY_WIDTH;
     window->min_height = WINDOW_SCENERY_HEIGHT;
     window->max_height = WINDOW_SCENERY_HEIGHT;
+#ifdef __3DS__
+    _sceneryCollapsed = false;
+#endif
 
     return window;
 }
@@ -501,7 +517,7 @@ void window_scenery_close(rct_window *w)
 }
 
 static sint32 count_rows(sint32 items){
-    sint32 rows = items / 9;
+    sint32 rows = items / SCENERY_COLUMNS;
 
     return rows;
 }
@@ -526,7 +542,7 @@ static scenery_item window_scenery_count_rows_with_selected_item(sint32 tabIndex
         }
         totalItems++;
     }
-    sceneryItem.allRows = count_rows(totalItems + 8);
+    sceneryItem.allRows = count_rows(totalItems + (SCENERY_COLUMNS - 1));
     return sceneryItem;
 }
 
@@ -539,7 +555,7 @@ static sint32 window_scenery_count_rows()
         totalItems++;
     }
 
-    sint32 rows = count_rows(totalItems + 8);
+    sint32 rows = count_rows(totalItems + (SCENERY_COLUMNS - 1));
     return rows;
 }
 
@@ -677,6 +693,9 @@ static void window_scenery_mousedown(rct_window *w, rct_widgetindex widgetIndex,
 
     if (widgetIndex >= WIDX_SCENERY_TAB_1 && widgetIndex <= WIDX_SCENERY_TAB_20) {
         gWindowSceneryActiveTabIndex = widgetIndex - WIDX_SCENERY_TAB_1;
+#ifdef __3DS__
+        _sceneryCollapsed = false;
+#endif
         window_invalidate(w);
         gSceneryPlaceCost = MONEY32_UNDEFINED;
 
@@ -724,6 +743,7 @@ static void window_scenery_event_07(rct_window *w)
  */
 static void window_scenery_update(rct_window *w)
 {
+#ifndef __3DS__
     const CursorState * state = context_get_cursor_state();
     rct_window *other = window_find_from_point(state->x, state->y);
     if (other == w) {
@@ -763,6 +783,7 @@ static void window_scenery_update(rct_window *w)
             w->max_height = WINDOW_SCENERY_HEIGHT;
         }
     }
+#endif
 
     window_invalidate(w);
 
@@ -807,7 +828,10 @@ void window_scenery_scrollgetsize(rct_window *w, sint32 scrollIndex, sint32 *wid
 
 static sint16 get_scenery_id_by_cursor_pos(sint16 x, sint16 y)
 {
-    sint32 tabSceneryIndex = x / SCENERY_BUTTON_WIDTH + (y / SCENERY_BUTTON_HEIGHT) * 9;
+    sint32 col = x / SCENERY_BUTTON_WIDTH;
+    if (col < 0 || col >= SCENERY_COLUMNS)
+        return -1;
+    sint32 tabSceneryIndex = col + (y / SCENERY_BUTTON_HEIGHT) * SCENERY_COLUMNS;
     uint8 tabIndex = gWindowSceneryActiveTabIndex;
 
     sint32 itemCounter = 0;
@@ -841,6 +865,9 @@ void window_scenery_scrollmousedown(rct_window *w, sint32 scrollIndex, sint32 x,
     audio_play_sound(4, 0, w->x + (w->width / 2));
     w->scenery.hover_counter = -16;
     gSceneryPlaceCost = MONEY32_UNDEFINED;
+#ifdef __3DS__
+    _sceneryCollapsed = true;
+#endif
     window_invalidate(w);
 }
 
@@ -919,6 +946,29 @@ void window_scenery_invalidate(rct_window *w)
         w->pressed_widgets |= (1 << WIDX_SCENERY_EYEDROPPER_BUTTON);
     if (gWindowSceneryClusterEnabled == 1)
         w->pressed_widgets |= (1 << WIDX_SCENERY_BUILD_CLUSTER_BUTTON);
+
+#ifdef __3DS__
+    window_scenery_widgets[WIDX_SCENERY_BACKGROUND].right = w->width - 1;
+    window_scenery_widgets[WIDX_SCENERY_TITLE].right = w->width - 2;
+    window_scenery_widgets[WIDX_SCENERY_CLOSE].left = w->width - 13;
+    window_scenery_widgets[WIDX_SCENERY_CLOSE].right = w->width - 3;
+    window_scenery_widgets[WIDX_SCENERY_TAB_CONTENT_PANEL].right = w->width - 1;
+    window_scenery_widgets[WIDX_SCENERY_LIST].right = w->width - 26;
+    window_scenery_widgets[WIDX_SCENERY_ROTATE_OBJECTS_BUTTON].left = w->width - 25;
+    window_scenery_widgets[WIDX_SCENERY_ROTATE_OBJECTS_BUTTON].right = w->width - 2;
+    window_scenery_widgets[WIDX_SCENERY_REPAINT_SCENERY_BUTTON].left = w->width - 25;
+    window_scenery_widgets[WIDX_SCENERY_REPAINT_SCENERY_BUTTON].right = w->width - 2;
+    window_scenery_widgets[WIDX_SCENERY_PRIMARY_COLOUR_BUTTON].left = w->width - 19;
+    window_scenery_widgets[WIDX_SCENERY_PRIMARY_COLOUR_BUTTON].right = w->width - 8;
+    window_scenery_widgets[WIDX_SCENERY_SECONDARY_COLOUR_BUTTON].left = w->width - 19;
+    window_scenery_widgets[WIDX_SCENERY_SECONDARY_COLOUR_BUTTON].right = w->width - 8;
+    window_scenery_widgets[WIDX_SCENERY_TERTIARY_COLOUR_BUTTON].left = w->width - 19;
+    window_scenery_widgets[WIDX_SCENERY_TERTIARY_COLOUR_BUTTON].right = w->width - 8;
+    window_scenery_widgets[WIDX_SCENERY_EYEDROPPER_BUTTON].left = w->width - 25;
+    window_scenery_widgets[WIDX_SCENERY_EYEDROPPER_BUTTON].right = w->width - 2;
+    window_scenery_widgets[WIDX_SCENERY_BUILD_CLUSTER_BUTTON].left = w->width - 25;
+    window_scenery_widgets[WIDX_SCENERY_BUILD_CLUSTER_BUTTON].right = w->width - 2;
+#endif
 
     window_scenery_widgets[WIDX_SCENERY_ROTATE_OBJECTS_BUTTON].type = WWT_EMPTY;
     window_scenery_widgets[WIDX_SCENERY_EYEDROPPER_BUTTON].type = WWT_EMPTY;
@@ -1003,6 +1053,26 @@ void window_scenery_invalidate(rct_window *w)
             }
         }
     }
+
+#ifdef __3DS__
+    sint16 targetY = _sceneryCollapsed ? 416 : 268;
+    sint16 targetH = _sceneryCollapsed ? 60 : 196;
+    if (w->y != targetY || w->height != targetH || w->x != 42 || w->width != 316)
+    {
+        gfx_invalidate_screen();
+        w->x = 42;
+        w->y = targetY;
+        w->width = 316;
+        w->height = targetH;
+        w->min_height = targetH;
+        w->max_height = targetH;
+        window_scenery_widgets[WIDX_SCENERY_LIST].type = _sceneryCollapsed ? WWT_EMPTY : WWT_SCROLL;
+        if (!_sceneryCollapsed)
+        {
+            window_scenery_update_scroll(w);
+        }
+    }
+#endif
 
     window_scenery_widgets[WIDX_SCENERY_BACKGROUND].right = w->width - 1;
     window_scenery_widgets[WIDX_SCENERY_BACKGROUND].bottom = w->height - 1;
@@ -1228,7 +1298,7 @@ void window_scenery_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, sint32 sc
         }
 
         left += SCENERY_BUTTON_WIDTH;
-        if (left >= 594) {
+        if (left >= SCENERY_COLUMNS * SCENERY_BUTTON_WIDTH) {
             top += SCENERY_BUTTON_HEIGHT;
             left = 0;
         }

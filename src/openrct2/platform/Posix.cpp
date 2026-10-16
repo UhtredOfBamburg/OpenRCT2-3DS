@@ -14,14 +14,14 @@
  *****************************************************************************/
 #pragma endregion
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__psp2__)
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__psp2__) || defined(__3DS__)
 
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <fnmatch.h>
-#if !defined(__EMSCRIPTEN__) && !defined(__psp2__)
+#if !defined(__EMSCRIPTEN__) && !defined(__psp2__) && !defined(__3DS__)
     #include <fts.h>
 #endif
 #include <libgen.h>
@@ -98,12 +98,12 @@ void platform_get_time_local(rct2_time *out_time)
 
 static size_t platform_utf8_to_multibyte(const utf8 *path, char *buffer, size_t buffer_size)
 {
-    wchar_t *wpath = utf8_to_widechar(path);
-#ifdef __psp2__
+#if defined(__psp2__) || defined(__3DS__)
     memset(buffer, 0, buffer_size);
-    strcpy(buffer, path);
+    strncpy(buffer, path, buffer_size - 1);
     return strlen(buffer);
-#endif
+#else
+    wchar_t *wpath = utf8_to_widechar(path);
     size_t len = wcstombs(NULL, wpath, 0);
     bool truncated = false;
     if (len > buffer_size - 1) {
@@ -116,6 +116,7 @@ static size_t platform_utf8_to_multibyte(const utf8 *path, char *buffer, size_t 
         log_warning("truncated string %s", buffer);
     free(wpath);
     return len;
+#endif
 }
 
 bool platform_file_exists(const utf8 *path)
@@ -156,7 +157,7 @@ bool platform_original_game_data_exists(const utf8 *path)
 // "a vaporware GNU extension".
 static mode_t openrct2_getumask()
 {
-#ifdef __psp2__
+#if defined(__psp2__) || defined(__3DS__)
     return 511;
 #else
     mode_t mask = umask(0);
@@ -172,14 +173,21 @@ bool platform_ensure_directory_exists(const utf8 *path)
     platform_utf8_to_multibyte(path, buffer, MAX_PATH);
 
     log_verbose("Create directory: %s", buffer);
-    for (char *p = buffer + 1; *p != '\0'; p++) {
+    char *start = buffer + 1;
+    char *colon = strchr(buffer, ':');
+    if (colon != nullptr) {
+        start = colon + 1;
+        if (*start == '/') start++;
+    }
+    for (char *p = start; *p != '\0'; p++) {
         if (*p == '/') {
             // Temporarily truncate
             *p = '\0';
 
             log_verbose("mkdir(%s)", buffer);
-            if (mkdir(buffer, mask) != 0) {
+            if (!platform_directory_exists(buffer) && mkdir(buffer, mask) != 0) {
                 if (errno != EEXIST) {
+                    *p = '/';
                     return false;
                 }
             }
@@ -190,7 +198,7 @@ bool platform_ensure_directory_exists(const utf8 *path)
     }
 
     log_verbose("mkdir(%s)", buffer);
-    if (mkdir(buffer, mask) != 0) {
+    if (!platform_directory_exists(buffer) && mkdir(buffer, mask) != 0) {
         if (errno != EEXIST) {
             return false;
         }
@@ -268,14 +276,21 @@ utf8 * platform_get_absolute_path(const utf8 * relative_path, const utf8 * base_
     }
     else
     {
-        safe_strcpy(path, base_path, MAX_PATH);
+        safe_strcpy(path, relative_path, MAX_PATH);
     }
+#ifdef __3DS__
+    return _strdup(path);
+#else
     return realpath(path,NULL);
+#endif
 }
 
 
 bool platform_lock_single_instance()
 {
+#if defined(__psp2__) || defined(__3DS__)
+    return true;
+#else
     char pidFilePath[MAX_PATH];
 
     safe_strcpy(pidFilePath, _userDataDirectoryPath, sizeof(pidFilePath));
@@ -309,6 +324,7 @@ bool platform_lock_single_instance()
         return false;
     }
     return true;
+#endif
 }
 
 sint32 platform_get_drives() {
@@ -414,7 +430,7 @@ time_t platform_file_get_modified_time(const utf8* path){
 
 uint8 platform_get_locale_temperature_format(){
 // LC_MEASUREMENT is GNU specific.
-#ifdef __psp2__
+#if defined(__psp2__) || defined(__3DS__)
     return TEMPERATURE_FORMAT_C;
 #else
 #ifdef LC_MEASUREMENT
@@ -456,7 +472,7 @@ datetime64 platform_get_datetime_now_utc()
 }
 
 utf8* platform_get_username() {
-#ifdef __psp2__
+#if defined(__psp2__) || defined(__3DS__)
     return nullptr;
 #else
     struct passwd* pw = getpwuid(getuid());
@@ -471,7 +487,7 @@ utf8* platform_get_username() {
 
 bool platform_process_is_elevated()
 {
-#if !defined(__EMSCRIPTEN__) && !defined(__psp2__)
+#if !defined(__EMSCRIPTEN__) && !defined(__psp2__) && !defined(__3DS__)
    return (geteuid() == 0);
 #else
    return false;

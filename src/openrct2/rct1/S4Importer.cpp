@@ -1830,6 +1830,7 @@ private:
 
     void LoadObjects()
     {
+        object_manager_defer_updates(true);
         LoadObjects(OBJECT_TYPE_RIDE, _rideEntries);
         LoadObjects(OBJECT_TYPE_SMALL_SCENERY, _smallSceneryEntries);
         LoadObjects(OBJECT_TYPE_LARGE_SCENERY, _largeSceneryEntries);
@@ -1850,6 +1851,7 @@ private:
         }));
         LoadObjects(OBJECT_TYPE_PARK_ENTRANCE, std::vector<const char *>({ "PKENT1  " }));
         LoadObjects(OBJECT_TYPE_WATER, _waterEntry);
+        object_manager_defer_updates(false);
     }
 
     void LoadObjects(uint8 objectType, const EntryList &entries)

@@ -249,6 +249,12 @@ private:
 
     bool ExecuteCommand(const TitleCommand * command)
     {
+#ifdef __3DS__
+        if (TitleSequenceIsLoadCommand(command))
+        {
+            return true;
+        }
+#endif
         switch (command->Type) {
         case TITLE_SCRIPT_END:
             _waitCounter = 1;

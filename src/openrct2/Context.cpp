@@ -72,6 +72,11 @@ using namespace OpenRCT2;
 using namespace OpenRCT2::Audio;
 using namespace OpenRCT2::Ui;
 
+#ifdef __3DS__
+extern "C" void n3ds_boot_log(int percent, const char * step);
+extern "C" void n3ds_draw_loading_progress(int current, int total);
+#endif
+
 namespace OpenRCT2
 {
     class Context : public IContext
@@ -335,19 +340,31 @@ namespace OpenRCT2
                 _uiContext->CreateWindow();
             }
 
+#ifdef __3DS__
+            n3ds_boot_log(15, "Initialise: loading object repository");
+#endif
             // TODO Ideally we want to delay this until we show the title so that we can
             //      still open the game window and draw a progress screen for the creation
             //      of the object cache.
             _objectRepository->LoadOrConstruct();
 
+#ifdef __3DS__
+            n3ds_boot_log(30, "Initialise: scanning track designs");
+#endif
             // TODO Like objects, this can take a while if there are a lot of track designs
             //      its also really something really we might want to do in the background
             //      as its not required until the player wants to place a new ride.
             _trackDesignRepository->Scan();
 
+#ifdef __3DS__
+            n3ds_boot_log(45, "Initialise: scanning scenarios and title sequences");
+#endif
             _scenarioRepository->Scan();
             TitleSequenceManager::Scan();
 
+#ifdef __3DS__
+            n3ds_boot_log(55, "Initialise: audio_init");
+#endif
             if (!gOpenRCT2Headless)
             {
                 audio_init();
@@ -355,11 +372,16 @@ namespace OpenRCT2
                 audio_init_ride_sounds_and_info();
             }
 
+#ifdef __3DS__
+            n3ds_boot_log(65, "Initialise: theme_manager_initialise");
+#endif
             http_init();
             network_set_env(_env);
             chat_init();
             theme_manager_initialise();
+#ifndef __3DS__
             CopyOriginalUserFilesOver();
+#endif
 
             if (!gOpenRCT2NoGraphics)
             {
@@ -368,6 +390,9 @@ namespace OpenRCT2
                 lightfx_init();
 #endif
             }
+#ifdef __3DS__
+            n3ds_boot_log(85, "Initialise: viewport_init_all + game_init_all");
+#endif
             gScenarioTicks = 0;
             util_srand((uint32)time(nullptr));
             input_reset_place_obj_modifier();
@@ -375,11 +400,18 @@ namespace OpenRCT2
             game_init_all(150);
 
             _titleScreen = new TitleScreen();
+#ifdef __3DS__
+            n3ds_boot_log(92, "Initialise: complete");
+#endif
             return true;
         }
 
         bool LoadParkFromFile(const std::string &path, bool loadTitleScreenOnFail) final override
         {
+#ifdef __3DS__
+            n3ds_boot_log(-1, (std::string("LoadParkFromFile: ") + path).c_str());
+            n3ds_draw_loading_progress(20, 100);
+#endif
             try
             {
                 auto fs = FileStream(path, FILE_MODE_OPEN);
@@ -388,6 +420,9 @@ namespace OpenRCT2
             catch (const std::exception &e)
             {
                 Console::Error::WriteLine(e.what());
+#ifdef __3DS__
+                n3ds_boot_log(-1, (std::string("LoadParkFromFile exception: ") + e.what()).c_str());
+#endif
             }
             return false;
         }
@@ -414,10 +449,21 @@ namespace OpenRCT2
 
                     try
                     {
+#ifdef __3DS__
+                        n3ds_draw_loading_progress(45, 100);
+#endif
                         auto result = parkImporter->LoadFromStream(stream, info.Type == FILE_TYPE::SCENARIO, false, path.c_str());
                         if (result.Error == PARK_LOAD_ERROR_OK)
                         {
+#ifdef __3DS__
+                            n3ds_boot_log(-1, "parkImporter->Import starting");
+                            n3ds_draw_loading_progress(70, 100);
+#endif
                             parkImporter->Import();
+#ifdef __3DS__
+                            n3ds_boot_log(-1, "parkImporter->Import complete");
+                            n3ds_draw_loading_progress(95, 100);
+#endif
                             game_fix_save_vars();
                             sprite_position_tween_reset();
                             gScreenAge = 0;
@@ -459,6 +505,9 @@ namespace OpenRCT2
                     catch (const std::exception &e)
                     {
                         Console::Error::WriteLine(e.what());
+#ifdef __3DS__
+                        n3ds_boot_log(-1, (std::string("LoadParkFromStream exception: ") + e.what()).c_str());
+#endif
                     }
                 }
                 else
@@ -502,9 +551,18 @@ namespace OpenRCT2
 
         void LoadBaseGraphics()
         {
+#ifdef __3DS__
+            n3ds_boot_log(70, "LoadBaseGraphics: gfx_load_g1");
+#endif
             gfx_load_g1(_env);
+#ifdef __3DS__
+            n3ds_boot_log(78, "LoadBaseGraphics: gfx_load_g2 + gfx_load_csg");
+#endif
             gfx_load_g2();
             gfx_load_csg();
+#ifdef __3DS__
+            n3ds_boot_log(82, "LoadBaseGraphics: font_sprite_initialise_characters");
+#endif
             font_sprite_initialise_characters();
         }
 
@@ -513,6 +571,9 @@ namespace OpenRCT2
          */
         void Launch()
         {
+#ifdef __3DS__
+            n3ds_boot_log(95, "Launch: title_load starting");
+#endif
             gIntroState = INTRO_STATE_NONE;
             if ((gOpenRCT2StartupAction == STARTUP_ACTION_TITLE) && gConfigGeneral.play_intro)
             {
@@ -621,6 +682,9 @@ namespace OpenRCT2
             }
 #endif // DISABLE_NETWORK
 
+#ifdef __3DS__
+            n3ds_boot_log(100, "Launch: entering RunGameLoop");
+#endif
             RunGameLoop();
         }
 

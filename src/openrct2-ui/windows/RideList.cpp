@@ -202,7 +202,11 @@ rct_window * window_ride_list_open()
     // Check if window is already open
     window = window_bring_to_front_by_class(WC_RIDE_LIST);
     if (window == nullptr) {
+#ifdef __3DS__
+        window = window_create_auto_pos(316, 220, &window_ride_list_events, WC_RIDE_LIST, WF_10 | WF_RESIZABLE);
+#else
         window = window_create_auto_pos(340, 240, &window_ride_list_events, WC_RIDE_LIST, WF_10 | WF_RESIZABLE);
+#endif
         window->widgets = window_ride_list_widgets;
         window->enabled_widgets =
             (1 << WIDX_CLOSE) |
@@ -223,8 +227,13 @@ rct_window * window_ride_list_open()
         window->no_list_items = 0;
         window->selected_list_item = -1;
         window->frame_no = 0;
+#ifdef __3DS__
+        window->min_width = 316;
+        window->min_height = 200;
+#else
         window->min_width = 340;
         window->min_height = 240;
+#endif
         window->max_width = 400;
         window->max_height = 700;
         window_ride_list_refresh_list(window);
@@ -290,7 +299,11 @@ static void window_ride_list_mouseup(rct_window *w, rct_widgetindex widgetIndex)
  */
 static void window_ride_list_resize(rct_window *w)
 {
+#ifdef __3DS__
+    w->min_width = 316;
+#else
     w->min_width = 340;
+#endif
     w->min_height = 124;
     if (w->width < w->min_width) {
         window_invalidate(w);

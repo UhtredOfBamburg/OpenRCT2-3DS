@@ -133,6 +133,10 @@ public:
             throw IOException(String::StdFormat("Unable to open '%s'", path));
         }
 
+#ifdef __3DS__
+        setvbuf(_file, nullptr, _IOFBF, 64 * 1024);
+#endif
+
         Seek(0, STREAM_SEEK_END);
         _fileSize = GetPosition();
         Seek(0, STREAM_SEEK_BEGIN);
@@ -174,7 +178,7 @@ public:
     {
 #if defined(_MSC_VER)
         return _ftelli64(_file);
-#elif (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#elif (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__3DS__)
         return ftello(_file);
 #elif  defined(__psp2__)
         return _pos;
@@ -202,7 +206,7 @@ public:
             _fseeki64(_file, offset, SEEK_END);
             break;
         }
-#elif (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#elif (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__3DS__)
         switch (origin) {
         case STREAM_SEEK_BEGIN:
             fseeko(_file, offset, SEEK_SET);

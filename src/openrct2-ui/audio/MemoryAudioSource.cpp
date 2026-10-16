@@ -86,7 +86,7 @@ namespace OpenRCT2 { namespace Audio
             if (rw != nullptr)
             {
                 SDL_AudioSpec audiospec = { 0 };
-                uint32 audioLen;
+                Uint32 audioLen;
                 SDL_AudioSpec * spec = SDL_LoadWAV_RW(rw, false, &audiospec, &_dataSDL, &audioLen);
                 if (spec != nullptr)
                 {
@@ -114,6 +114,81 @@ namespace OpenRCT2 { namespace Audio
             log_verbose("MemoryAudioSource::LoadCSS1(%s, %d)", path, index);
 
             Unload();
+
+            static std::vector<uint8> sCss1Cache;
+            static std::string sCss1CachePath;
+
+            if (index == 0 || sCss1Cache.empty() || sCss1CachePath != path)
+            {
+                sCss1Cache.clear();
+                sCss1CachePath.clear();
+                SDL_RWops * rw = SDL_RWFromFile(path, "rb");
+                if (rw != nullptr)
+                {
+                    Sint64 fileSize = SDL_RWsize(rw);
+                    if (fileSize > 0)
+                    {
+                        try
+                        {
+                            sCss1Cache.resize((size_t)fileSize);
+                            SDL_RWread(rw, sCss1Cache.data(), (size_t)fileSize, 1);
+                            sCss1CachePath = path;
+                        }
+                        catch (const std::bad_alloc &)
+                        {
+                            sCss1Cache.clear();
+                            sCss1Cache.shrink_to_fit();
+                        }
+                    }
+                    SDL_RWclose(rw);
+                }
+            }
+
+            if (!sCss1Cache.empty() && sCss1Cache.size() >= sizeof(uint32))
+            {
+                bool result = false;
+                const uint8 * base = sCss1Cache.data();
+                size_t totalLen = sCss1Cache.size();
+                uint32 numSounds = 0;
+                std::copy_n(base, sizeof(uint32), reinterpret_cast<uint8 *>(&numSounds));
+                if (index < numSounds && (4 + (index + 1) * 4) <= totalLen)
+                {
+                    uint32 pcmOffset = 0;
+                    std::copy_n(base + 4 + index * 4, sizeof(uint32), reinterpret_cast<uint8 *>(&pcmOffset));
+                    if (pcmOffset + sizeof(uint32) + sizeof(WaveFormatEx) <= totalLen)
+                    {
+                        uint32 pcmSize = 0;
+                        std::copy_n(base + pcmOffset, sizeof(uint32), reinterpret_cast<uint8 *>(&pcmSize));
+                        WaveFormatEx waveFormat;
+                        std::copy_n(base + pcmOffset + sizeof(uint32), sizeof(WaveFormatEx), reinterpret_cast<uint8 *>(&waveFormat));
+                        size_t dataStart = pcmOffset + sizeof(uint32) + sizeof(WaveFormatEx);
+                        if (dataStart + pcmSize <= totalLen)
+                        {
+                            _length = pcmSize;
+                            _format.freq = waveFormat.frequency;
+                            _format.format = AUDIO_S16LSB;
+                            _format.channels = waveFormat.channels;
+                            try
+                            {
+                                _data.resize(_length);
+                                std::copy_n(base + dataStart, _length, _data.data());
+                                result = true;
+                            }
+                            catch (const std::bad_alloc &)
+                            {
+                                log_verbose("Unable to allocate data");
+                            }
+                        }
+                    }
+                }
+                if (index + 1 >= numSounds || index >= 62)
+                {
+                    sCss1Cache.clear();
+                    sCss1Cache.shrink_to_fit();
+                    sCss1CachePath.clear();
+                }
+                return result;
+            }
 
             bool result = false;
             SDL_RWops * rw = SDL_RWFromFile(path, "rb");
@@ -166,20 +241,27 @@ namespace OpenRCT2 { namespace Audio
                 SDL_AudioCVT cvt;
                 if (SDL_BuildAudioCVT(&cvt, _format.format, _format.channels, _format.freq, format->format, format->channels, format->freq) >= 0)
                 {
-                    auto src = GetData();
-                    auto cvtBuffer = std::vector<uint8>(_length * cvt.len_mult);
-                    std::copy_n(src, _length, cvtBuffer.data());
-                    cvt.len = (sint32)_length;
-                    cvt.buf = cvtBuffer.data();
-                    if (SDL_ConvertAudio(&cvt) >= 0)
+                    try
                     {
-                        cvtBuffer.resize(cvt.len_cvt);
+                        auto src = GetData();
+                        auto cvtBuffer = std::vector<uint8>(_length * cvt.len_mult);
+                        std::copy_n(src, _length, cvtBuffer.data());
+                        cvt.len = (sint32)_length;
+                        cvt.buf = cvtBuffer.data();
+                        if (SDL_ConvertAudio(&cvt) >= 0)
+                        {
+                            cvtBuffer.resize(cvt.len_cvt);
 
-                        Unload();
-                        _data = std::move(cvtBuffer);
-                        _length = cvt.len_cvt;
-                        _format = *format;
-                        return true;
+                            Unload();
+                            _data = std::move(cvtBuffer);
+                            _length = cvt.len_cvt;
+                            _format = *format;
+                            return true;
+                        }
+                    }
+                    catch (const std::bad_alloc &)
+                    {
+                        log_verbose("Unable to allocate audio conversion buffer");
                     }
                 }
             }

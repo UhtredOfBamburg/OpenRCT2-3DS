@@ -43,7 +43,14 @@
 #include <openrct2/interface/Chat.h>
 #include <openrct2/Input.h>
 #include <openrct2/interface/Console.h>
+#include <openrct2/interface/Viewport.h>
 #include <openrct2-ui/interface/Window.h>
+#include <openrct2/Game.h>
+#include <openrct2/OpenRCT2.h>
+#ifdef __3DS__
+#include <3ds.h>
+extern void window_3ds_toggle_dual_screen_mode();
+#endif
 
 using namespace OpenRCT2;
 using namespace OpenRCT2::Drawing;
@@ -102,6 +109,18 @@ public:
           _windowManager(CreateWindowManager()),
           _keyboardShortcuts(env)
     {
+#ifdef __3DS__
+        static uint8 sDummyKeysState[256] = { 0 };
+        _keysState = sDummyKeysState;
+        SDL_Init(SDL_INIT_TIMER);
+        _cursorRepository.LoadCursors();
+        _keyboardShortcuts.Reset();
+        _keyboardShortcuts.Load();
+        _cursorState.x = 200;
+        _cursorState.y = 360;
+        _cursorState.abs_x = 200;
+        _cursorState.abs_y = 360;
+#else
         SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS,"1");
         SDL_setenv("VITA_DISABLE_TOUCH_BACK", "1", 1);
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0)
@@ -122,15 +141,20 @@ public:
             _cursorState.abs_x = 2;
             _cursorState.abs_y = 2;
         }
+#endif
     }
 
     ~UiContext() override
     {
         CloseWindow();
         delete _windowManager;
+#ifdef __3DS__
+        SDL_QuitSubSystem(SDL_INIT_TIMER);
+#else
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
         SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+#endif
         delete _platformUiContext;
     }
 
@@ -195,15 +219,23 @@ public:
 
     bool HasFocus() override
     {
+#ifdef __3DS__
+        return true;
+#else
         uint32 windowFlags = GetWindowFlags();
         return (windowFlags & SDL_WINDOW_INPUT_FOCUS) != 0;
+#endif
     }
 
     bool IsMinimised() override
     {
+#ifdef __3DS__
+        return false;
+#else
         uint32 windowFlags = GetWindowFlags();
         return (windowFlags & SDL_WINDOW_MINIMIZED) ||
                (windowFlags & SDL_WINDOW_HIDDEN);
+#endif
     }
 
     bool IsSteamOverlayActive() override
@@ -244,22 +276,42 @@ public:
 
     void SetCursorVisible(bool value) override
     {
+#ifndef __3DS__
         SDL_ShowCursor(value ? SDL_ENABLE : SDL_DISABLE);
+#else
+        UNUSED(value);
+#endif
     }
 
     void GetCursorPosition(sint32 * x, sint32 * y) override
     {
+#ifdef __3DS__
+        if (x != nullptr) *x = _cursorState.abs_x;
+        if (y != nullptr) *y = _cursorState.abs_y;
+#else
         SDL_GetMouseState(x, y);
+#endif
     }
 
     void SetCursorPosition(sint32 x, sint32 y) override
     {
+#ifdef __3DS__
+        _cursorState.abs_x = x;
+        _cursorState.abs_y = y;
+        _cursorState.x = x;
+        _cursorState.y = y;
+#else
         SDL_WarpMouseInWindow(nullptr, x, y);
+#endif
     }
 
     void SetCursorTrap(bool value) override
     {
+#ifndef __3DS__
         SDL_SetWindowGrab(_window, value ? SDL_TRUE : SDL_FALSE);
+#else
+        UNUSED(value);
+#endif
     }
 
     void SetKeysPressed(uint32 keysym, uint8 scancode) override
@@ -271,7 +323,10 @@ public:
     // Drawing
     IDrawingEngine * CreateDrawingEngine(DRAWING_ENGINE_TYPE type) override
     {
-#ifdef __psp2__
+#ifdef __3DS__
+        UNUSED(type);
+        return CreateSoftwareDrawingEngine(this);
+#elif defined(__psp2__)
         return CreateHardwareDisplayDrawingEngine(this);
 #else
         switch ((sint32)type) {
@@ -313,6 +368,175 @@ public:
         _cursorState.right &= ~CURSOR_CHANGED;
         _cursorState.old = 0;
         _cursorState.touch = false;
+
+#ifdef __3DS__
+        if (!aptMainLoop())
+        {
+            context_quit();
+            return;
+        }
+
+        hidScanInput();
+        u32 kDown = hidKeysDown();
+        u32 kHeld = hidKeysHeld();
+        u32 kUp   = hidKeysUp();
+
+        // 1. Stylus Touch on Bottom Screen (320x240 -> mapped to virtual canvas x: 40..359, y: 240..479)
+        static sint32 sLastTouchX = 200;
+        static sint32 sLastTouchY = 360;
+        if (kHeld & KEY_TOUCH)
+        {
+            touchPosition touch;
+            hidTouchRead(&touch);
+            sint32 tx = Math::Clamp<sint32>(40, (sint32)touch.px + 40, 359);
+            sint32 ty = Math::Clamp<sint32>(240, (sint32)touch.py + 240, 479);
+            _cursorState.abs_x = tx;
+            _cursorState.abs_y = ty;
+            _cursorState.x = tx;
+            _cursorState.y = ty;
+            sLastTouchX = tx;
+            sLastTouchY = ty;
+        }
+        if (kDown & KEY_TOUCH)
+        {
+            store_mouse_input(MOUSE_STATE_LEFT_PRESS, _cursorState.x, _cursorState.y);
+            _cursorState.left = CURSOR_PRESSED;
+            _cursorState.old = 1;
+        }
+        if (kUp & KEY_TOUCH)
+        {
+            store_mouse_input(MOUSE_STATE_LEFT_RELEASE, sLastTouchX, sLastTouchY);
+            _cursorState.left = CURSOR_RELEASED;
+            _cursorState.old = 3;
+        }
+
+        // 2. Circle Pad & D-Pad: Direct Park Camera Panning
+        circlePosition cpad;
+        hidCircleRead(&cpad);
+        rct_window * mainWindow = window_get_main();
+        if (mainWindow != nullptr && mainWindow->viewport != nullptr)
+        {
+            sint32 panX = 0;
+            sint32 panY = 0;
+            if (std::abs(cpad.dx) > 20) panX += cpad.dx / 12;
+            if (std::abs(cpad.dy) > 20) panY -= cpad.dy / 12;
+            if (kHeld & KEY_DLEFT)  panX -= 8;
+            if (kHeld & KEY_DRIGHT) panX += 8;
+            if (kHeld & KEY_DUP)    panY -= 8;
+            if (kHeld & KEY_DDOWN)  panY += 8;
+
+            // Also support C-Stick for panning
+            circlePosition cstick;
+            hidCstickRead(&cstick);
+            if (std::abs(cstick.dx) > 20) panX += cstick.dx / 12;
+            if (std::abs(cstick.dy) > 20) panY -= cstick.dy / 12;
+
+            if (panX != 0 || panY != 0)
+            {
+                sint32 zoomShift = mainWindow->viewport->zoom;
+                mainWindow->saved_view_x += panX << zoomShift;
+                mainWindow->saved_view_y += panY << zoomShift;
+                mainWindow->flags &= ~WF_SCROLLING_TO_LOCATION;
+                viewport_update_position(mainWindow);
+            }
+        }
+
+        _cursorState.x = _cursorState.abs_x;
+        _cursorState.y = _cursorState.abs_y;
+
+        // 4. Physical Buttons
+        if (kDown & KEY_A)
+        {
+            store_mouse_input(MOUSE_STATE_LEFT_PRESS, _cursorState.x, _cursorState.y);
+            _cursorState.left = CURSOR_PRESSED;
+            _cursorState.old = 1;
+        }
+        if (kUp & KEY_A)
+        {
+            store_mouse_input(MOUSE_STATE_LEFT_RELEASE, _cursorState.x, _cursorState.y);
+            _cursorState.left = CURSOR_RELEASED;
+            _cursorState.old = 3;
+        }
+
+        if (kDown & KEY_B)
+        {
+            store_mouse_input(MOUSE_STATE_RIGHT_PRESS, _cursorState.x, _cursorState.y);
+            _cursorState.right = CURSOR_PRESSED;
+            _cursorState.old = 2;
+        }
+        if (kUp & KEY_B)
+        {
+            store_mouse_input(MOUSE_STATE_RIGHT_RELEASE, _cursorState.x, _cursorState.y);
+            _cursorState.right = CURSOR_RELEASED;
+            _cursorState.old = 4;
+            keyboard_shortcut_handle_command(SHORTCUT_CLOSE_TOP_MOST_WINDOW);
+        }
+
+        if (!(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO) && window_find_by_class(WC_TOP_TOOLBAR) == nullptr)
+        {
+            context_open_window(WC_TOP_TOOLBAR);
+        }
+
+        if (kDown & KEY_L)
+        {
+            keyboard_shortcut_handle_command(SHORTCUT_ROTATE_VIEW_ANTICLOCKWISE);
+        }
+        if (kDown & KEY_R)
+        {
+            keyboard_shortcut_handle_command(SHORTCUT_ROTATE_VIEW_CLOCKWISE);
+        }
+        if (kDown & KEY_ZL)
+        {
+            keyboard_shortcut_handle_command(SHORTCUT_ZOOM_VIEW_OUT);
+        }
+        if (kDown & KEY_ZR)
+        {
+            keyboard_shortcut_handle_command(SHORTCUT_ZOOM_VIEW_IN);
+        }
+        if (kDown & KEY_X)
+        {
+            if (!(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO))
+            {
+                if (gGameSpeed < 4)
+                {
+                    game_increase_game_speed();
+                }
+                else
+                {
+                    gGameSpeed = 1;
+                    window_invalidate_by_class(WC_TOP_TOOLBAR);
+                }
+            }
+        }
+        if (kDown & KEY_Y)
+        {
+            if (window_find_by_class(WC_SCENERY) != nullptr ||
+                window_find_by_class(WC_RIDE_CONSTRUCTION) != nullptr ||
+                window_find_by_class(WC_TRACK_DESIGN_PLACE) != nullptr ||
+                window_find_by_class(WC_TRACK_DESIGN_LIST) != nullptr)
+            {
+                keyboard_shortcut_handle_command(SHORTCUT_ROTATE_CONSTRUCTION_OBJECT);
+            }
+            else
+            {
+                keyboard_shortcut_handle_command(SHORTCUT_GRIDLINES_DISPLAY_TOGGLE);
+            }
+        }
+        if (kDown & KEY_START)
+        {
+            if (!(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO))
+            {
+                keyboard_shortcut_handle_command(SHORTCUT_PAUSE_GAME);
+            }
+        }
+        if (kDown & KEY_SELECT)
+        {
+            window_3ds_toggle_dual_screen_mode();
+        }
+
+        _cursorState.any = _cursorState.left | _cursorState.middle | _cursorState.right;
+        return;
+#endif
 
 
         currentTick = platform_get_ticks();
@@ -637,6 +861,12 @@ public:
      */
     void TriggerResize() override
     {
+#ifdef __3DS__
+        gConfigGeneral.window_scale = 1.0f;
+        _scaleQuality = SCALE_QUALITY_NN;
+        OnResize(400, 480);
+        return;
+#endif
         char scaleQualityBuffer[4];
         _scaleQuality = gConfigGeneral.scale_quality;
         if (gConfigGeneral.window_scale == std::floor(gConfigGeneral.window_scale))
@@ -675,7 +905,9 @@ public:
     void CloseWindow() override
     {
         drawing_engine_dispose();
+#ifndef __3DS__
         SDL_DestroyWindow(_window);
+#endif
         _window = nullptr;
     }
 
@@ -782,6 +1014,21 @@ public:
 private:
     void CreateWindow(sint32 x, sint32 y)
     {
+#ifdef __3DS__
+        UNUSED(x);
+        UNUSED(y);
+        gConfigGeneral.window_scale = 1.0f;
+        gConfigGeneral.window_width = 400;
+        gConfigGeneral.window_height = 480;
+        _window = nullptr;
+        _cursorState.abs_x = 200;
+        _cursorState.abs_y = 360;
+        _cursorState.x = 200;
+        _cursorState.y = 360;
+        drawing_engine_init();
+        OnResize(400, 480);
+        return;
+#endif
         // Get saved window size
         sint32 width = gConfigGeneral.window_width;
         sint32 height = gConfigGeneral.window_height;
@@ -818,6 +1065,18 @@ private:
 
     void OnResize(sint32 width, sint32 height)
     {
+#ifdef __3DS__
+        UNUSED(width);
+        UNUSED(height);
+        gConfigGeneral.window_scale = 1.0f;
+        _width = 400;
+        _height = 480;
+        drawing_engine_resize();
+        window_resize_gui(_width, _height);
+        window_relocate_windows(_width, _height);
+        gfx_invalidate_screen();
+        return;
+#endif
         // Scale the native window size to the game's canvas size
         _width = (sint32)(width / gConfigGeneral.window_scale);
         _height = (sint32)(height / gConfigGeneral.window_scale);

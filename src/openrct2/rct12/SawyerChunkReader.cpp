@@ -15,13 +15,17 @@
 #pragma endregion
 
 #include <algorithm>
+#include <vector>
 #include "../core/IStream.hpp"
 #include "../core/Math.hpp"
 #include "../core/Memory.hpp"
 #include "SawyerChunkReader.h"
 
-// Allow chunks to be uncompressed to a maximum of 16 MiB
+#ifdef __3DS__
+constexpr size_t MAX_UNCOMPRESSED_CHUNK_SIZE = 3500000;
+#else
 constexpr size_t MAX_UNCOMPRESSED_CHUNK_SIZE = 16 * 1024 * 1024;
+#endif
 
 constexpr const char * EXCEPTION_MSG_CORRUPT_CHUNK_SIZE = "Corrupt chunk size.";
 constexpr const char * EXCEPTION_MSG_DESTINATION_TOO_SMALL = "Chunk data larger than allocated destination capacity.";
@@ -155,10 +159,21 @@ size_t SawyerChunkReader::DecodeChunk(void * dst, size_t dstCapacity, const void
 
 size_t SawyerChunkReader::DecodeChunkRLERepeat(void * dst, size_t dstCapacity, const void * src, size_t srcLength)
 {
+#ifdef __3DS__
+    static std::vector<uint8> sImmBuffer;
+    size_t needed = std::min<size_t>(dstCapacity, MAX_UNCOMPRESSED_CHUNK_SIZE);
+    if (sImmBuffer.size() < needed)
+    {
+        sImmBuffer.resize(needed);
+    }
+    auto immLength = DecodeChunkRLE(sImmBuffer.data(), sImmBuffer.size(), src, srcLength);
+    return DecodeChunkRepeat(dst, dstCapacity, sImmBuffer.data(), immLength);
+#else
     auto immBufferLength = MAX_UNCOMPRESSED_CHUNK_SIZE;
     auto immBuffer = std::make_unique<uint8[]>(immBufferLength);
     auto immLength = DecodeChunkRLE(immBuffer.get(), immBufferLength, src, srcLength);
     return DecodeChunkRepeat(dst, dstCapacity, immBuffer.get(), immLength);
+#endif
 }
 
 size_t SawyerChunkReader::DecodeChunkRLE(void * dst, size_t dstCapacity, const void * src, size_t srcLength)

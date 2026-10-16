@@ -53,6 +53,15 @@ enum {
 validate_global_widx(WC_TRACK_DESIGN_PLACE, WIDX_ROTATE);
 
 static rct_widget window_track_place_widgets[] = {
+#ifdef __3DS__
+    { WWT_FRAME,            0,  0,      109,    0,      123,    0xFFFFFFFF,                     STR_NONE                                    },
+    { WWT_CAPTION,          0,  1,      108,    1,      14,     STR_STRING,                     STR_WINDOW_TITLE_TIP                        },
+    { WWT_CLOSEBOX,         0,  97,     107,    2,      13,     STR_CLOSE_X,                    STR_CLOSE_WINDOW_TIP                        },
+    { WWT_FLATBTN,          0,  58,     81,     54,     77,     SPR_ROTATE_ARROW,               STR_ROTATE_90_TIP                           },
+    { WWT_FLATBTN,          0,  28,     51,     54,     77,     SPR_MIRROR_ARROW,               STR_MIRROR_IMAGE_TIP                        },
+    { WWT_BUTTON,           0,  4,      105,    105,    119,    STR_SELECT_A_DIFFERENT_DESIGN,  STR_GO_BACK_TO_DESIGN_SELECTION_WINDOW_TIP  },
+    { WWT_EMPTY,            0,  0,      0,      0,      0,      0xFFFFFFFF,                     STR_NONE                                    },
+#else
     { WWT_FRAME,            0,  0,      199,    0,      123,    0xFFFFFFFF,                     STR_NONE                                    },
     { WWT_CAPTION,          0,  1,      198,    1,      14,     STR_STRING,                     STR_WINDOW_TITLE_TIP                        },
     { WWT_CLOSEBOX,         0,  187,    197,    2,      13,     STR_CLOSE_X,                    STR_CLOSE_WINDOW_TIP                        },
@@ -60,6 +69,7 @@ static rct_widget window_track_place_widgets[] = {
     { WWT_FLATBTN,          0,  173,    196,    59,     82,     SPR_MIRROR_ARROW,               STR_MIRROR_IMAGE_TIP                        },
     { WWT_BUTTON,           0,  4,      195,    109,    120,    STR_SELECT_A_DIFFERENT_DESIGN,  STR_GO_BACK_TO_DESIGN_SELECTION_WINDOW_TIP  },
     { WWT_EMPTY,            0,  0,      0,      0,      0,      0xFFFFFFFF,                     STR_NONE                                    },
+#endif
     { WIDGETS_END },
 };
 
@@ -156,7 +166,11 @@ rct_window * window_track_place_open(const track_design_file_ref *tdFileRef)
     rct_window *w = window_create(
         0,
         29,
+#ifdef __3DS__
+        110,
+#else
         200,
+#endif
         124,
         &window_track_place_events,
         WC_TRACK_DESIGN_PLACE,
@@ -464,6 +478,7 @@ static void window_track_place_paint(rct_window *w, rct_drawpixelinfo *dpi)
     window_draw_widgets(w, dpi);
 
     // Draw mini tile preview
+#ifndef __3DS__
     rct_drawpixelinfo clippedDpi;
     if (clip_drawpixelinfo(&clippedDpi, dpi, w->x + 4, w->y + 18, 168, 78)) {
         rct_g1_element g1temp = { nullptr };
@@ -473,10 +488,15 @@ static void window_track_place_paint(rct_window *w, rct_drawpixelinfo *dpi)
         gfx_set_g1_element(SPR_TEMP, &g1temp);
         gfx_draw_sprite(&clippedDpi, SPR_TEMP | SPRITE_ID_PALETTE_COLOUR_1(NOT_TRANSLUCENT(w->colours[0])), 0, 0, 0);
     }
+#endif
 
     // Price
     if (_window_track_place_last_cost != MONEY32_UNDEFINED && !(gParkFlags & PARK_FLAGS_NO_MONEY)) {
+#ifdef __3DS__
+        gfx_draw_string_centred(dpi, STR_COST_LABEL, w->x + 55, w->y + 86, COLOUR_BLACK, &_window_track_place_last_cost);
+#else
         gfx_draw_string_centred(dpi, STR_COST_LABEL, w->x + 88, w->y + 94, COLOUR_BLACK, &_window_track_place_last_cost);
+#endif
     }
 }
 

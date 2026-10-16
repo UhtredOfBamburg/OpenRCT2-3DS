@@ -142,10 +142,12 @@ void TitleScreen::Load()
     {
         _sequencePlayer->Begin(_currentSequence);
 
+#ifndef __3DS__
         // Force the title sequence to load / update so we
         // don't see a blank screen for a split second.
         TryLoadSequence();
         _sequencePlayer->Update();
+#endif
     }
 
     log_verbose("TitleScreen::Load() finished");
@@ -160,7 +162,9 @@ void TitleScreen::Update()
 
     if (game_is_not_paused())
     {
+#ifndef __3DS__
         TryLoadSequence();
+#endif
         _sequencePlayer->Update();
 
         sint32 numUpdates = 1;
@@ -235,7 +239,9 @@ void TitleScreen::TitleInitialise()
         }
     }
     ChangePresetSequence((sint32)seqId);
+#ifndef __3DS__
     TryLoadSequence();
+#endif
 }
 
 bool TitleScreen::TryLoadSequence(bool loadPreview)
@@ -273,6 +279,9 @@ bool TitleScreen::TryLoadSequence(bool loadPreview)
         if (!loadPreview)
         {
             game_init_all(150);
+            viewport_init_all();
+            context_open_window(WC_MAIN_WINDOW);
+            CreateWindows();
         }
         return false;
     }

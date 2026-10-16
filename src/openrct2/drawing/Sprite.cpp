@@ -373,8 +373,16 @@ bool gfx_load_csg()
         _csg.elements.resize(_csg.header.num_entries);
         read_and_convert_gxdat(&fileHeader, _csg.header.num_entries, false, _csg.elements.data());
 
-        // Read element data
-        _csg.data = fileData.ReadArray<uint8>(_csg.header.total_size);
+        // Read element data (use malloc directly so 3DS 64MB mode can gracefully skip CSG if contiguous RAM is tight)
+        _csg.data = (uint8 *)malloc(_csg.header.total_size);
+        if (_csg.data == nullptr)
+        {
+            _csg.elements.clear();
+            _csg.elements.shrink_to_fit();
+            log_warning("Not enough contiguous RAM for CSG1.DAT (%u bytes), continuing with G1", _csg.header.total_size);
+            return false;
+        }
+        fileData.Read(_csg.data, _csg.header.total_size);
 
         // Fix entry data offsets
         for (uint32 i = 0; i < _csg.header.num_entries; i++)

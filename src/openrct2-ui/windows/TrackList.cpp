@@ -46,6 +46,18 @@ enum {
 validate_global_widx(WC_TRACK_DESIGN_LIST, WIDX_ROTATE);
 
 static rct_widget window_track_list_widgets[] = {
+#ifdef __3DS__
+    { WWT_FRAME,            0,  0,      315,    0,      219,    0xFFFFFFFF,                 STR_NONE                            },
+    { WWT_CAPTION,          0,  1,      314,    1,      14,     STR_SELECT_DESIGN,          STR_WINDOW_TITLE_TIP                },
+    { WWT_CLOSEBOX,         0,  303,    313,    2,      13,     STR_CLOSE_X,                STR_CLOSE_WINDOW_TIP                },
+    { WWT_TABLE_HEADER,     0,  4,      155,    18,     30,     STR_SELECT_OTHER_RIDE,      STR_NONE                            },
+    { WWT_TEXT_BOX,         1,  4,      105,    32,     44,     STR_NONE,                   STR_NONE                            },
+    { WWT_BUTTON,           0,  108,    155,    32,     44,     STR_OBJECT_SEARCH_CLEAR,    STR_NONE                            },
+    { WWT_SCROLL,           0,  4,      155,    46,     215,    SCROLL_VERTICAL,            STR_CLICK_ON_DESIGN_TO_BUILD_IT_TIP },
+    { WWT_FLATBTN,          0,  158,    311,    18,     60,     0xFFFFFFFF,                 STR_NONE                            },
+    { WWT_FLATBTN,          0,  288,    311,    192,    215,    SPR_ROTATE_ARROW,           STR_ROTATE_90_TIP                   },
+    { WWT_FLATBTN,          0,  263,    286,    192,    215,    SPR_SCENERY,                STR_TOGGLE_SCENERY_TIP              },
+#else
     { WWT_FRAME,            0,  0,      599,    0,      430,    0xFFFFFFFF,                 STR_NONE                            },
     { WWT_CAPTION,          0,  1,      598,    1,      14,     STR_SELECT_DESIGN,          STR_WINDOW_TITLE_TIP                },
     { WWT_CLOSEBOX,         0,  587,    597,    2,      13,     STR_CLOSE_X,                STR_CLOSE_WINDOW_TIP                },
@@ -56,6 +68,7 @@ static rct_widget window_track_list_widgets[] = {
     { WWT_FLATBTN,          0,  224,    595,    18,     236,    0xFFFFFFFF,                 STR_NONE                            },
     { WWT_FLATBTN,          0,  574,    597,    405,    428,    SPR_ROTATE_ARROW,           STR_ROTATE_90_TIP                   },
     { WWT_FLATBTN,          0,  574,    597,    381,    404,    SPR_SCENERY,                STR_TOGGLE_SCENERY_TIP              },
+#endif
     { WIDGETS_END },
 };
 
@@ -142,6 +155,19 @@ rct_window * window_track_list_open(ride_list_item item)
         y = TOP_TOOLBAR_HEIGHT + 2;
     }
 
+#ifdef __3DS__
+    x = 42;
+    y = 248;
+    rct_window *w = window_create(
+        x,
+        y,
+        316,
+        220,
+        &window_track_list_events,
+        WC_TRACK_DESIGN_LIST,
+        0
+    );
+#else
     rct_window *w = window_create(
         x,
         y,
@@ -151,6 +177,7 @@ rct_window * window_track_list_open(ride_list_item item)
         WC_TRACK_DESIGN_LIST,
         0
     );
+#endif
 
     window_track_list_widgets[WIDX_FILTER_STRING].string = _filterString;
     w->widgets = window_track_list_widgets;
@@ -256,12 +283,6 @@ static void window_track_list_close(rct_window *w)
  */
 static void window_track_list_select(rct_window *w, sint32 listIndex)
 {
-    // Displays a message if the ride can't load, fix #4080
-    if (_loadedTrackDesign == nullptr) {
-        context_show_error(STR_CANT_BUILD_PARK_ENTRANCE_HERE, STR_TRACK_LOAD_FAILED_ERROR);
-        return;
-    }
-
     audio_play_sound(SOUND_CLICK_1, 0, w->x + (w->width / 2));
     if (!(gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER)) {
         if (listIndex == 0) {
@@ -270,6 +291,12 @@ static void window_track_list_select(rct_window *w, sint32 listIndex)
             return;
         }
         listIndex--;
+    }
+
+    // Displays a message if the ride can't load, fix #4080
+    if (_loadedTrackDesign == nullptr) {
+        context_show_error(STR_CANT_BUILD_PARK_ENTRANCE_HERE, STR_TRACK_LOAD_FAILED_ERROR);
+        return;
     }
 
     rct_track_td6 *td6 = _loadedTrackDesign;
@@ -381,6 +408,14 @@ static void window_track_list_scrollmousedown(rct_window *w, sint32 scrollIndex,
     if (!w->track_list.track_list_being_updated) {
         sint32 i = window_track_list_get_list_item_index_from_position(x, y);
         if (i != -1) {
+            w->selected_list_item = i;
+            if ((gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER) || i != 0) {
+                sint32 tdIdx = (gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER) ? i : (i - 1);
+                if (tdIdx >= 0 && (size_t)tdIdx < _filteredTrackIds.size()) {
+                    track_list_load_design_for_preview(_trackDesigns[_filteredTrackIds[tdIdx]].path);
+                    _loadedTrackDesignIndex = _filteredTrackIds[tdIdx];
+                }
+            }
             window_track_list_select(w, i);
         }
     }
@@ -518,7 +553,7 @@ static void window_track_list_paint(rct_window *w, rct_drawpixelinfo *dpi)
     x = w->x + widget->left + 1;
     y = w->y + widget->top + 1;
     colour = ColourMapA[w->colours[0]].darkest;
-    gfx_fill_rect(dpi, x, y, x + 369, y + 216, colour);
+    gfx_fill_rect(dpi, x, y, w->x + widget->right - 1, w->y + widget->bottom - 1, colour);
 
     if (_loadedTrackDesignIndex != trackIndex) {
         utf8 *path = _trackDesigns[trackIndex].path;
@@ -537,9 +572,8 @@ static void window_track_list_paint(rct_window *w, rct_drawpixelinfo *dpi)
     sint32 trackPreviewX = x, trackPreviewY = y;
     x = w->x + (widget->left + widget->right) / 2;
     y = w->y + (widget->top + widget->bottom) / 2;
-#ifndef __psp2__
+#if !defined(__psp2__) && !defined(__3DS__)
     if (drawing_engine_get_type() != DRAWING_ENGINE_OPENGL) {
-#endif
         rct_g1_element g1temp = { nullptr };
         g1temp.offset = _trackDesignPreviewPixels.data() + (_currentTrackPieceDirection * TRACK_PREVIEW_IMAGE_SIZE);
         g1temp.width = 370;
@@ -547,33 +581,35 @@ static void window_track_list_paint(rct_window *w, rct_drawpixelinfo *dpi)
         g1temp.flags = G1_FLAG_BMP;
         gfx_set_g1_element(SPR_TEMP, &g1temp);
         gfx_draw_sprite(dpi, SPR_TEMP, trackPreviewX, trackPreviewY, 0);
-#ifndef __psp2__
     }
     else
     {
         gfx_draw_string_centred_clipped(dpi, STR_NOT_SUPPPORTED_IN_OPENGL, nullptr, COLOUR_BLACK, x, y, 368);
     }
+#else
+    UNUSED(trackPreviewX);
+    UNUSED(trackPreviewY);
 #endif
     y = w->y + widget->bottom - 12;
 
     // Warnings
     if ((td6->track_flags & TRACK_DESIGN_FLAG_VEHICLE_UNAVAILABLE) && !(gScreenFlags & SCREEN_FLAGS_TRACK_MANAGER)) {
         // Vehicle design not available
-        gfx_draw_string_centred_clipped(dpi, STR_VEHICLE_DESIGN_UNAVAILABLE, nullptr, COLOUR_BLACK, x, y, 368);
+        gfx_draw_string_centred_clipped(dpi, STR_VEHICLE_DESIGN_UNAVAILABLE, nullptr, COLOUR_BLACK, x, y, widget->right - widget->left - 2);
         y -= SCROLLABLE_ROW_HEIGHT;
     }
 
     if (td6->track_flags & TRACK_DESIGN_FLAG_SCENERY_UNAVAILABLE) {
         if (!gTrackDesignSceneryToggle) {
             // Scenery not available
-            gfx_draw_string_centred_clipped(dpi, STR_DESIGN_INCLUDES_SCENERY_WHICH_IS_UNAVAILABLE, nullptr, COLOUR_BLACK, x, y, 368);
+            gfx_draw_string_centred_clipped(dpi, STR_DESIGN_INCLUDES_SCENERY_WHICH_IS_UNAVAILABLE, nullptr, COLOUR_BLACK, x, y, widget->right - widget->left - 2);
             y -= SCROLLABLE_ROW_HEIGHT;
         }
     }
 
     // Track design name
     utf8 *trackName = _trackDesigns[trackIndex].name;
-    gfx_draw_string_centred_clipped(dpi, STR_TRACK_PREVIEW_NAME_FORMAT, &trackName, COLOUR_BLACK, x, y, 368);
+    gfx_draw_string_centred_clipped(dpi, STR_TRACK_PREVIEW_NAME_FORMAT, &trackName, COLOUR_BLACK, x, y, widget->right - widget->left - 2);
 
     // Information
     x = w->x + widget->left + 1;
@@ -777,11 +813,9 @@ static bool track_list_load_design_for_preview(utf8 *path)
 
     _loadedTrackDesign = track_design_open(path);
     if (_loadedTrackDesign != nullptr) {
-#ifndef __psp2__
+#if !defined(__psp2__) && !defined(__3DS__)
         if (drawing_engine_get_type() != DRAWING_ENGINE_OPENGL) {
-#endif
             track_design_draw_preview(_loadedTrackDesign, _trackDesignPreviewPixels.data());
-#ifndef __psp2__
         }
 #endif
         return true;

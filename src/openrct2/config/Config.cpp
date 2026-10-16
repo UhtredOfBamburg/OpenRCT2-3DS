@@ -156,8 +156,13 @@ namespace Config
             model->fullscreen_mode = reader->GetSint32("fullscreen_mode", 0);
             model->fullscreen_height = reader->GetSint32("fullscreen_height", -1);
             model->fullscreen_width = reader->GetSint32("fullscreen_width", -1);
+#ifdef __3DS__
+            model->rct1_path = reader->GetCString("rct1_path", "sdmc:/3ds/openrct2/rct1");
+            model->rct2_path = reader->GetCString("game_path", "sdmc:/3ds/openrct2/rct2");
+#else
             model->rct1_path = reader->GetCString("rct1_path", nullptr);
             model->rct2_path = reader->GetCString("game_path", nullptr);
+#endif
             model->landscape_smoothing = reader->GetBoolean("landscape_smoothing", true);
             model->language = reader->GetEnum<sint32>("language", platform_get_locale_language(), Enum_LanguageEnum);
             model->measurement_format = reader->GetEnum<sint32>("measurement_format", platform_get_locale_measurement_format(), Enum_MeasurementFormat);
@@ -170,7 +175,11 @@ namespace Config
             model->window_snap_proximity = reader->GetSint32("window_snap_proximity", 5);
             model->window_width = reader->GetSint32("window_width", -1);
             model->default_display = reader->GetSint32("default_display", 0);
+#ifdef __3DS__
+            model->drawing_engine = reader->GetEnum<sint32>("drawing_engine", DRAWING_ENGINE_SOFTWARE, Enum_DrawingEngine);
+#else
             model->drawing_engine = reader->GetEnum<sint32>("drawing_engine", DRAWING_ENGINE_SOFTWARE_WITH_HARDWARE_DISPLAY, Enum_DrawingEngine);
+#endif
             model->uncap_fps = reader->GetBoolean("uncap_fps", false);
             model->use_vsync = reader->GetBoolean("use_vsync", true);
             model->use_virtual_floor = reader->GetBoolean("use_virtual_floor", true);
@@ -606,6 +615,17 @@ namespace Config
      */
     static std::string FindRCT2Path()
     {
+#ifdef __3DS__
+        if (platform_original_game_data_exists("sdmc:/3ds/openrct2/rct2"))
+        {
+            return "sdmc:/3ds/openrct2/rct2";
+        }
+        if (platform_original_game_data_exists("sdmc:/rct2"))
+        {
+            return "sdmc:/rct2";
+        }
+        return "sdmc:/3ds/openrct2/rct2";
+#endif
 #ifdef __psp2__
         return "ux0:data/RCT2";
 #endif

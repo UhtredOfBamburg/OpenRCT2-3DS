@@ -89,6 +89,47 @@ validate_global_widx(WC_RIDE_CONSTRUCTION, WIDX_EXIT);
 validate_global_widx(WC_RIDE_CONSTRUCTION, WIDX_ROTATE);
 
 static rct_widget window_ride_construction_widgets[] = {
+#ifdef __3DS__
+    { WWT_FRAME,            0,  0,      315,    0,      213,    0xFFFFFFFF,                                 STR_NONE                                                },
+    { WWT_CAPTION,          0,  1,      314,    1,      14,     STR_RIDE_CONSTRUCTION_WINDOW_TITLE,         STR_WINDOW_TITLE_TIP                                    },
+    { WWT_CLOSEBOX,         0,  303,    313,    2,      13,     STR_CLOSE_X,                                STR_CLOSE_WINDOW_TIP                                    },
+    { WWT_GROUPBOX,         0,  3,      162,    17,     73,     STR_RIDE_CONSTRUCTION_DIRECTION,            STR_NONE                                                },
+    { WWT_GROUPBOX,         0,  3,      162,    76,     116,    STR_RIDE_CONSTRUCTION_SLOPE,                STR_NONE                                                },
+    { WWT_GROUPBOX,         0,  3,      162,    120,    160,    STR_RIDE_CONSTRUCTION_ROLL_BANKING,         STR_NONE                                                },
+    { WWT_FLATBTN,          1,  6,      27,     29,     52,     SPR_RIDE_CONSTRUCTION_LEFT_CURVE_SMALL,     STR_RIDE_CONSTRUCTION_LEFT_CURVE_VERY_SMALL_TIP         },
+    { WWT_FLATBTN,          1,  6,      27,     29,     52,     SPR_RIDE_CONSTRUCTION_LEFT_CURVE_SMALL,     STR_RIDE_CONSTRUCTION_LEFT_CURVE_SMALL_TIP              },
+    { WWT_FLATBTN,          1,  28,     49,     29,     52,     SPR_RIDE_CONSTRUCTION_LEFT_CURVE,           STR_RIDE_CONSTRUCTION_LEFT_CURVE_TIP                    },
+    { WWT_FLATBTN,          1,  72,     93,     29,     52,     SPR_RIDE_CONSTRUCTION_STRAIGHT,             STR_RIDE_CONSTRUCTION_STRAIGHT_TIP                      },
+    { WWT_FLATBTN,          1,  116,    137,    29,     52,     SPR_RIDE_CONSTRUCTION_RIGHT_CURVE,          STR_RIDE_CONSTRUCTION_RIGHT_CURVE_TIP                   },
+    { WWT_FLATBTN,          1,  138,    159,    29,     52,     SPR_RIDE_CONSTRUCTION_RIGHT_CURVE_SMALL,    STR_RIDE_CONSTRUCTION_RIGHT_CURVE_SMALL_TIP             },
+    { WWT_FLATBTN,          1,  138,    159,    29,     52,     SPR_RIDE_CONSTRUCTION_RIGHT_CURVE_SMALL,    STR_RIDE_CONSTRUCTION_RIGHT_CURVE_VERY_SMALL_TIP        },
+    { WWT_BUTTON,           1,  17,     148,    55,     68,     STR_YELLOW_STRING,                          STR_RIDE_CONSTRUCTION_OTHER_TRACK_CONFIGURATIONS_TIP    },
+    { WWT_FLATBTN,          1,  23,     46,     88,     111,    SPR_RIDE_CONSTRUCTION_SLOPE_DOWN_STEEP,     STR_RIDE_CONSTRUCTION_STEEP_SLOPE_DOWN_TIP              },
+    { WWT_FLATBTN,          1,  47,     70,     88,     111,    SPR_RIDE_CONSTRUCTION_SLOPE_DOWN,           STR_RIDE_CONSTRUCTION_SLOPE_DOWN_TIP                    },
+    { WWT_FLATBTN,          1,  71,     94,     88,     111,    SPR_RIDE_CONSTRUCTION_SLOPE_LEVEL,          STR_RIDE_CONSTRUCTION_LEVEL_TIP                         },
+    { WWT_FLATBTN,          1,  95,     118,    88,     111,    SPR_RIDE_CONSTRUCTION_SLOPE_UP,             STR_RIDE_CONSTRUCTION_SLOPE_UP_TIP                      },
+    { WWT_FLATBTN,          1,  119,    142,    88,     111,    SPR_RIDE_CONSTRUCTION_SLOPE_UP_STEEP,       STR_RIDE_CONSTRUCTION_STEEP_SLOPE_UP_TIP                },
+    { WWT_FLATBTN,          1,  134,    157,    88,     111,    SPR_CHAIN_LIFT,                             STR_RIDE_CONSTRUCTION_CHAIN_LIFT_TIP                    },
+    { WWT_FLATBTN,          1,  47,     70,     132,    155,    SPR_RIDE_CONSTRUCTION_LEFT_BANK,            STR_RIDE_CONSTRUCTION_ROLL_FOR_LEFT_CURVE_TIP           },
+    { WWT_FLATBTN,          1,  71,     94,     132,    155,    SPR_RIDE_CONSTRUCTION_NO_BANK,              STR_RIDE_CONSTRUCTION_NO_ROLL_TIP                       },
+    { WWT_FLATBTN,          1,  95,     118,    132,    155,    SPR_RIDE_CONSTRUCTION_RIGHT_BANK,           STR_RIDE_CONSTRUCTION_ROLL_FOR_RIGHT_CURVE_TIP          },
+    { WWT_IMGBTN,           1,  165,    312,    17,     154,    0xFFFFFFFF,                                 STR_RIDE_CONSTRUCTION_CONSTRUCT_SELECTED_SECTION_TIP    },
+    { WWT_FLATBTN,          1,  216,    261,    157,    180,    SPR_DEMOLISH_CURRENT_SECTION,               STR_RIDE_CONSTRUCTION_REMOVE_HIGHLIGHTED_SECTION_TIP    },
+    { WWT_FLATBTN,          1,  50,     71,     29,     52,     SPR_RIDE_CONSTRUCTION_LEFT_CURVE_LARGE,     STR_RIDE_CONSTRUCTION_LEFT_CURVE_LARGE_TIP              },
+    { WWT_FLATBTN,          1,  176,    199,    157,    180,    SPR_PREVIOUS,                               STR_RIDE_CONSTRUCTION_MOVE_TO_PREVIOUS_SECTION_TIP      },
+    { WWT_FLATBTN,          1,  278,    301,    157,    180,    SPR_NEXT,                                   STR_RIDE_CONSTRUCTION_MOVE_TO_NEXT_SECTION_TIP          },
+    { WWT_GROUPBOX,         0,  165,    312,    181,    209,    0xFFFFFFFF,                                 STR_NONE                                                },
+    { WWT_BUTTON,           1,  170,    236,    191,    203,    STR_RIDE_CONSTRUCTION_ENTRANCE,             STR_RIDE_CONSTRUCTION_ENTRANCE_TIP                      },
+    { WWT_BUTTON,           1,  241,    307,    191,    203,    STR_RIDE_CONSTRUCTION_EXIT,                 STR_RIDE_CONSTRUCTION_EXIT_TIP                          },
+    { WWT_FLATBTN,          1,  94,     115,    29,     52,     SPR_RIDE_CONSTRUCTION_RIGHT_CURVE_LARGE,    STR_RIDE_CONSTRUCTION_RIGHT_CURVE_LARGE_TIP             },
+    { WWT_FLATBTN,          1,  227,    250,    157,    180,    SPR_ROTATE_ARROW,                           STR_ROTATE_90_TIP                                       },
+    { WWT_FLATBTN,          1,  19,     42,     132,    155,    SPR_RIDE_CONSTRUCTION_U_SHAPED_TRACK,       STR_RIDE_CONSTRUCTION_U_SHAPED_OPEN_TRACK_TIP           },
+    { WWT_FLATBTN,          1,  123,    146,    132,    155,    SPR_RIDE_CONSTRUCTION_O_SHAPED_TRACK,       STR_RIDE_CONSTRUCTION_O_SHAPED_ENCLOSED_TRACK_TIP       },
+    { WWT_GROUPBOX,         0,  96,     162,    120,    160,    STR_RIDE_CONSTRUCTION_SEAT_ROT,             STR_NONE                                                },
+    { WWT_SPINNER,          1,  101,    158,    138,    149,    0,                                          STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
+    { WWT_BUTTON,           1,  147,    157,    139,    143,    STR_NUMERIC_UP,                             STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
+    { WWT_BUTTON,           1,  147,    157,    144,    148,    STR_NUMERIC_DOWN,                           STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
+#else
     { WWT_FRAME,            0,  0,      165,    0,      393,    0xFFFFFFFF,                                 STR_NONE                                                },
     { WWT_CAPTION,          0,  1,      164,    1,      14,     STR_RIDE_CONSTRUCTION_WINDOW_TITLE,         STR_WINDOW_TITLE_TIP                                    },
     { WWT_CLOSEBOX,         0,  153,    163,    2,      13,     STR_CLOSE_X,                                STR_CLOSE_WINDOW_TIP                                    },
@@ -128,6 +169,7 @@ static rct_widget window_ride_construction_widgets[] = {
     { WWT_SPINNER,          1,  101,    158,    138,    149,    0,                                          STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
     { WWT_BUTTON,           1,  147,    157,    139,    143,    STR_NUMERIC_UP,                             STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
     { WWT_BUTTON,           1,  147,    157,    144,    148,    STR_NUMERIC_DOWN,                           STR_RIDE_CONSTRUCTION_SELECT_SEAT_ROTATION_ANGLE_TIP    },
+#endif
     { WIDGETS_END }
 };
 
@@ -545,7 +587,11 @@ rct_window *window_ride_construction_open()
         return context_open_window_view(WV_MAZE_CONSTRUCTION);
     }
 
+#ifdef __3DS__
+    w = window_create(42, 253, 316, 214, &window_ride_construction_events, WC_RIDE_CONSTRUCTION, WF_NO_AUTO_CLOSE);
+#else
     w = window_create(0, 29, 166, 394, &window_ride_construction_events, WC_RIDE_CONSTRUCTION, WF_NO_AUTO_CLOSE);
+#endif
 
     w->widgets = window_ride_construction_widgets;
     w->enabled_widgets = (1ULL << WIDX_CLOSE) |
@@ -2115,6 +2161,141 @@ static void window_ride_construction_invalidate(rct_window *w)
     // Set window title arguments
     set_format_arg(4, rct_string_id, ride->name);
     set_format_arg(6, uint32, ride->name_arguments);
+
+#ifdef __3DS__
+    bool isGroundPlacePhase =
+        (_rideConstructionState == RIDE_CONSTRUCTION_STATE_PLACE ||
+         _rideConstructionState == RIDE_CONSTRUCTION_STATE_ENTRANCE_EXIT);
+
+    if (isGroundPlacePhase)
+    {
+        if (w->width != 92 || w->x != 268 || w->y != 296 || w->height != 170)
+        {
+            gfx_invalidate_screen();
+            w->x = 268;
+            w->y = 296;
+            w->width = 92;
+            w->height = 170;
+        }
+        window_ride_construction_widgets[WIDX_BACKGROUND].right = 91;
+        window_ride_construction_widgets[WIDX_BACKGROUND].bottom = 169;
+        window_ride_construction_widgets[WIDX_TITLE].right = 90;
+        window_ride_construction_widgets[WIDX_CLOSE].left = 79;
+        window_ride_construction_widgets[WIDX_CLOSE].right = 89;
+
+        // Hide left-column track builder controls while placing station/entrance/exit on ground with stylus
+        for (sint32 i = WIDX_DIRECTION_GROUPBOX; i <= WIDX_BANK_RIGHT; i++)
+        {
+            window_ride_construction_widgets[i].type = WWT_EMPTY;
+        }
+        window_ride_construction_widgets[WIDX_LEFT_CURVE_LARGE].type = WWT_EMPTY;
+        window_ride_construction_widgets[WIDX_RIGHT_CURVE_LARGE].type = WWT_EMPTY;
+        for (sint32 i = WIDX_U_TRACK; i <= WIDX_SEAT_ROTATION_ANGLE_SPINNER_DOWN; i++)
+        {
+            window_ride_construction_widgets[i].type = WWT_EMPTY;
+        }
+
+        if (_rideConstructionState == RIDE_CONSTRUCTION_STATE_PLACE)
+        {
+            window_ride_construction_widgets[WIDX_CONSTRUCT].type = WWT_IMGBTN;
+            window_ride_construction_widgets[WIDX_CONSTRUCT].left = 4;
+            window_ride_construction_widgets[WIDX_CONSTRUCT].right = 87;
+            window_ride_construction_widgets[WIDX_CONSTRUCT].top = 18;
+            window_ride_construction_widgets[WIDX_CONSTRUCT].bottom = 116;
+
+            window_ride_construction_widgets[WIDX_ROTATE].type = WWT_FLATBTN;
+            window_ride_construction_widgets[WIDX_ROTATE].left = 34;
+            window_ride_construction_widgets[WIDX_ROTATE].right = 57;
+            window_ride_construction_widgets[WIDX_ROTATE].top = 122;
+            window_ride_construction_widgets[WIDX_ROTATE].bottom = 145;
+
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].type = WWT_EMPTY;
+            window_ride_construction_widgets[WIDX_ENTRANCE].type = WWT_EMPTY;
+            window_ride_construction_widgets[WIDX_EXIT].type = WWT_EMPTY;
+        }
+        else
+        {
+            window_ride_construction_widgets[WIDX_CONSTRUCT].type = WWT_EMPTY;
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].type = WWT_GROUPBOX;
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].left = 3;
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].right = 88;
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].top = 18;
+            window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].bottom = 112;
+
+            window_ride_construction_widgets[WIDX_ENTRANCE].type = WWT_BUTTON;
+            window_ride_construction_widgets[WIDX_ENTRANCE].left = 6;
+            window_ride_construction_widgets[WIDX_ENTRANCE].right = 85;
+            window_ride_construction_widgets[WIDX_ENTRANCE].top = 30;
+            window_ride_construction_widgets[WIDX_ENTRANCE].bottom = 64;
+
+            window_ride_construction_widgets[WIDX_EXIT].type = WWT_BUTTON;
+            window_ride_construction_widgets[WIDX_EXIT].left = 6;
+            window_ride_construction_widgets[WIDX_EXIT].right = 85;
+            window_ride_construction_widgets[WIDX_EXIT].top = 70;
+            window_ride_construction_widgets[WIDX_EXIT].bottom = 104;
+
+            window_ride_construction_widgets[WIDX_ROTATE].type = WWT_FLATBTN;
+            window_ride_construction_widgets[WIDX_ROTATE].left = 34;
+            window_ride_construction_widgets[WIDX_ROTATE].right = 57;
+            window_ride_construction_widgets[WIDX_ROTATE].top = 122;
+            window_ride_construction_widgets[WIDX_ROTATE].bottom = 145;
+        }
+    }
+    else
+    {
+        bool wasCompact = (w->width != 316);
+        if (wasCompact || w->x != 42 || w->y != 266 || w->height != 214)
+        {
+            gfx_invalidate_screen();
+            w->x = 42;
+            w->y = 266;
+            w->width = 316;
+            w->height = 214;
+        }
+        window_ride_construction_widgets[WIDX_BACKGROUND].right = 315;
+        window_ride_construction_widgets[WIDX_BACKGROUND].bottom = 213;
+        window_ride_construction_widgets[WIDX_TITLE].right = 314;
+        window_ride_construction_widgets[WIDX_CLOSE].left = 303;
+        window_ride_construction_widgets[WIDX_CLOSE].right = 313;
+
+        window_ride_construction_widgets[WIDX_DIRECTION_GROUPBOX].type = WWT_GROUPBOX;
+        window_ride_construction_widgets[WIDX_SLOPE_GROUPBOX].type = WWT_GROUPBOX;
+        window_ride_construction_widgets[WIDX_BANKING_GROUPBOX].type = WWT_GROUPBOX;
+
+        window_ride_construction_widgets[WIDX_CONSTRUCT].left = 165;
+        window_ride_construction_widgets[WIDX_CONSTRUCT].right = 312;
+        window_ride_construction_widgets[WIDX_CONSTRUCT].top = 17;
+        window_ride_construction_widgets[WIDX_CONSTRUCT].bottom = 154;
+
+        window_ride_construction_widgets[WIDX_ROTATE].left = 227;
+        window_ride_construction_widgets[WIDX_ROTATE].right = 250;
+        window_ride_construction_widgets[WIDX_ROTATE].top = 157;
+        window_ride_construction_widgets[WIDX_ROTATE].bottom = 180;
+
+        window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].type = WWT_GROUPBOX;
+        window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].left = 165;
+        window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].right = 312;
+        window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].top = 181;
+        window_ride_construction_widgets[WIDX_ENTRANCE_EXIT_GROUPBOX].bottom = 209;
+
+        window_ride_construction_widgets[WIDX_ENTRANCE].type = WWT_BUTTON;
+        window_ride_construction_widgets[WIDX_ENTRANCE].left = 170;
+        window_ride_construction_widgets[WIDX_ENTRANCE].right = 236;
+        window_ride_construction_widgets[WIDX_ENTRANCE].top = 191;
+        window_ride_construction_widgets[WIDX_ENTRANCE].bottom = 203;
+
+        window_ride_construction_widgets[WIDX_EXIT].type = WWT_BUTTON;
+        window_ride_construction_widgets[WIDX_EXIT].left = 241;
+        window_ride_construction_widgets[WIDX_EXIT].right = 307;
+        window_ride_construction_widgets[WIDX_EXIT].top = 191;
+        window_ride_construction_widgets[WIDX_EXIT].bottom = 203;
+
+        if (wasCompact)
+        {
+            window_ride_construction_update_widgets(w);
+        }
+    }
+#endif
 }
 
 /**

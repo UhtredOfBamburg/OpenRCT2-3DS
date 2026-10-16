@@ -27,7 +27,7 @@ bool _log_levels[DIAGNOSTIC_LEVEL_COUNT] = { true, true, true, true, true };
 
 static FILE * diagnostic_get_stream(DIAGNOSTIC_LEVEL level)
 {
-#ifdef __psp2__
+#if defined(__psp2__) || defined(__3DS__)
     return stderr;
 #endif
     switch (level) {

@@ -36,11 +36,19 @@
 
 using sint8 = int8_t;
 using sint16 = int16_t;
+#ifdef __3DS__
+using sint32 = signed int;
+#else
 using sint32 = int32_t;
+#endif
 using sint64 = int64_t;
 using uint8 = uint8_t;
 using uint16 = uint16_t;
+#ifdef __3DS__
+using uint32 = unsigned int;
+#else
 using uint32 = uint32_t;
+#endif
 using uint64 = uint64_t;
 
 #include "Diagnostic.h"
@@ -80,7 +88,7 @@ using colour_t = uint8;
 // Gets the name of a symbol as a C string
 #define nameof(symbol) #symbol
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__psp2__)
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__psp2__) || defined(__3DS__)
 #include <unistd.h>
 #define STUB() log_warning("Function %s at %s:%d is a stub.\n", __PRETTY_FUNCTION__, __FILE__, __LINE__)
 #define _strcmpi _stricmp

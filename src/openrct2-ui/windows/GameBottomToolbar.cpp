@@ -291,7 +291,12 @@ static void window_game_bottom_toolbar_invalidate(rct_window *w)
     w->widgets[WIDX_DATE].bottom = line_height + 1;
 
     // Anchor the middle and right panel to the right
+#ifdef __3DS__
+    w->x = 40;
+    sint32 x = 320;
+#else
     sint32 x = context_get_width();
+#endif
     w->width = x;
     x--;
     window_game_bottom_toolbar_widgets[WIDX_RIGHT_OUTSET].right = x;

@@ -77,6 +77,14 @@ enum
 
 #pragma region Widgets
 
+#ifdef __3DS__
+#define FINANCES_WIDTH 316
+#define FINANCES_HEIGHT 230
+#else
+#define FINANCES_WIDTH 530
+#define FINANCES_HEIGHT 290
+#endif
+
 #define TAB_WIDGETS \
     { WWT_TAB,      1,  3,      33,     17, 43,     IMAGE_TYPE_REMAP | SPR_TAB, STR_FINANCES_SHOW_SUMMARY_TAB_TIP       }, \
     { WWT_TAB,      1,  34,     64,     17, 43,     IMAGE_TYPE_REMAP | SPR_TAB, STR_FINANCES_SHOW_CASH_TAB_TIP          }, \
@@ -87,62 +95,62 @@ enum
 
 static rct_widget _windowFinancesSummaryWidgets[] =
 {
-    { WWT_FRAME,            0,  0,      529,    0,  288,    0xFFFFFFFF,                 STR_NONE                                }, \
-    { WWT_CAPTION,          0,  1,      528,    1,  14,     STR_FINANCIAL_SUMMARY,      STR_WINDOW_TITLE_TIP                    }, \
-    { WWT_CLOSEBOX,         0,  517,    527,    2,  13,     STR_CLOSE_X,                STR_CLOSE_WINDOW_TIP                    }, \
-    { WWT_RESIZE,           1,  0,      529,    43, 288,    0xFFFFFFFF,                 STR_NONE                                }, \
+    { WWT_FRAME,            0,  0,      FINANCES_WIDTH - 1,     0,  FINANCES_HEIGHT - 2,    0xFFFFFFFF,                 STR_NONE                                }, \
+    { WWT_CAPTION,          0,  1,      FINANCES_WIDTH - 2,     1,  14,                     STR_FINANCIAL_SUMMARY,      STR_WINDOW_TITLE_TIP                    }, \
+    { WWT_CLOSEBOX,         0,  FINANCES_WIDTH - 13, FINANCES_WIDTH - 3, 2,  13,           STR_CLOSE_X,                STR_CLOSE_WINDOW_TIP                    }, \
+    { WWT_RESIZE,           1,  0,      FINANCES_WIDTH - 1,     43, FINANCES_HEIGHT - 2,    0xFFFFFFFF,                 STR_NONE                                }, \
     TAB_WIDGETS,
-    { WWT_SPINNER,          1,  64,     153,    259,    270,    STR_FINANCES_SUMMARY_LOAN_VALUE,    STR_NONE },
-    { WWT_BUTTON,           1,  142,    152,    260,    264,    STR_NUMERIC_UP,                     STR_NONE },
-    { WWT_BUTTON,           1,  142,    152,    265,    269,    STR_NUMERIC_DOWN,                   STR_NONE },
+    { WWT_SPINNER,          1,  64,     153,    FINANCES_HEIGHT - 31, FINANCES_HEIGHT - 20, STR_FINANCES_SUMMARY_LOAN_VALUE, STR_NONE },
+    { WWT_BUTTON,           1,  142,    152,    FINANCES_HEIGHT - 30, FINANCES_HEIGHT - 26, STR_NUMERIC_UP,                  STR_NONE },
+    { WWT_BUTTON,           1,  142,    152,    FINANCES_HEIGHT - 25, FINANCES_HEIGHT - 21, STR_NUMERIC_DOWN,                STR_NONE },
     { WIDGETS_END },
 };
 
 static rct_widget _windowFinancesCashWidgets[] =
 {
-    { WWT_FRAME,            0,  0,      529,    0,      256,    0xFFFFFFFF,             STR_NONE },
-    { WWT_CAPTION,          0,  1,      528,    1,      14,     STR_FINANCIAL_GRAPH,    STR_WINDOW_TITLE_TIP },
-    { WWT_CLOSEBOX,         0,  517,    527,    2,      13,     STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
-    { WWT_RESIZE,           1,  0,      529,    43,     256,    0xFFFFFFFF,             STR_NONE },
+    { WWT_FRAME,            0,  0,      FINANCES_WIDTH - 1,     0,  FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
+    { WWT_CAPTION,          0,  1,      FINANCES_WIDTH - 2,     1,  14,                     STR_FINANCIAL_GRAPH,    STR_WINDOW_TITLE_TIP },
+    { WWT_CLOSEBOX,         0,  FINANCES_WIDTH - 13, FINANCES_WIDTH - 3, 2, 13,             STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
+    { WWT_RESIZE,           1,  0,      FINANCES_WIDTH - 1,     43, FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
     TAB_WIDGETS,
     { WIDGETS_END },
 };
 
 static rct_widget _windowFinancesParkValueWidgets[] =
 {
-    { WWT_FRAME,            0,  0,      529,    0,      256,    0xFFFFFFFF,             STR_NONE },
-    { WWT_CAPTION,          0,  1,      528,    1,      14,     STR_PARK_VALUE_GRAPH,   STR_WINDOW_TITLE_TIP },
-    { WWT_CLOSEBOX,         0,  517,    527,    2,      13,     STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
-    { WWT_RESIZE,           1,  0,      529,    43,     256,    0xFFFFFFFF,             STR_NONE },
+    { WWT_FRAME,            0,  0,      FINANCES_WIDTH - 1,     0,  FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
+    { WWT_CAPTION,          0,  1,      FINANCES_WIDTH - 2,     1,  14,                     STR_PARK_VALUE_GRAPH,   STR_WINDOW_TITLE_TIP },
+    { WWT_CLOSEBOX,         0,  FINANCES_WIDTH - 13, FINANCES_WIDTH - 3, 2, 13,             STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
+    { WWT_RESIZE,           1,  0,      FINANCES_WIDTH - 1,     43, FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
     TAB_WIDGETS,
     { WIDGETS_END },
 };
 
 static rct_widget _windowFinancesProfitWidgets[] =
 {
-    { WWT_FRAME,            0,  0,      529,    0,      256,    0xFFFFFFFF,             STR_NONE },
-    { WWT_CAPTION,          0,  1,      528,    1,      14,     STR_PROFIT_GRAPH,       STR_WINDOW_TITLE_TIP },
-    { WWT_CLOSEBOX,         0,  517,    527,    2,      13,     STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
-    { WWT_RESIZE,           1,  0,      529,    43,     256,    0xFFFFFFFF,             STR_NONE },
+    { WWT_FRAME,            0,  0,      FINANCES_WIDTH - 1,     0,  FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
+    { WWT_CAPTION,          0,  1,      FINANCES_WIDTH - 2,     1,  14,                     STR_PROFIT_GRAPH,       STR_WINDOW_TITLE_TIP },
+    { WWT_CLOSEBOX,         0,  FINANCES_WIDTH - 13, FINANCES_WIDTH - 3, 2, 13,             STR_CLOSE_X,            STR_CLOSE_WINDOW_TIP },
+    { WWT_RESIZE,           1,  0,      FINANCES_WIDTH - 1,     43, FINANCES_HEIGHT - 2,    0xFFFFFFFF,             STR_NONE },
     TAB_WIDGETS,
     { WIDGETS_END },
 };
 
 static rct_widget _windowFinancesMarketingWidgets[] =
 {
-    { WWT_FRAME,            0,  0,      529,    0,      256,    0xFFFFFFFF,                             STR_NONE },
-    { WWT_CAPTION,          0,  1,      528,    1,      14,     STR_MARKETING,                          STR_WINDOW_TITLE_TIP },
-    { WWT_CLOSEBOX,         0,  517,    527,    2,      13,     STR_CLOSE_X,                            STR_CLOSE_WINDOW_TIP },
-    { WWT_RESIZE,           1,  0,      529,    43,     256,    0xFFFFFFFF,                             STR_NONE },
+    { WWT_FRAME,            0,  0,      FINANCES_WIDTH - 1,     0,  FINANCES_HEIGHT - 2,    0xFFFFFFFF,                             STR_NONE },
+    { WWT_CAPTION,          0,  1,      FINANCES_WIDTH - 2,     1,  14,                     STR_MARKETING,                          STR_WINDOW_TITLE_TIP },
+    { WWT_CLOSEBOX,         0,  FINANCES_WIDTH - 13, FINANCES_WIDTH - 3, 2, 13,             STR_CLOSE_X,                            STR_CLOSE_WINDOW_TIP },
+    { WWT_RESIZE,           1,  0,      FINANCES_WIDTH - 1,     43, FINANCES_HEIGHT - 2,    0xFFFFFFFF,                             STR_NONE },
     TAB_WIDGETS,
-    { WWT_GROUPBOX,         2,  3,      526,    47,     91,     STR_MARKETING_CAMPAIGNS_IN_OPERATION,   STR_NONE },
-    { WWT_GROUPBOX,         2,  3,      526,    47,     252,    STR_MARKETING_CAMPAIGNS_AVAILABLE,      STR_NONE },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
-    { WWT_IMGBTN,           1,  8,      521,    0,      13,     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_GROUPBOX,         2,  3,      FINANCES_WIDTH - 4,     47, 91,                     STR_MARKETING_CAMPAIGNS_IN_OPERATION,   STR_NONE },
+    { WWT_GROUPBOX,         2,  3,      FINANCES_WIDTH - 4,     47, FINANCES_HEIGHT - 6,    STR_MARKETING_CAMPAIGNS_AVAILABLE,      STR_NONE },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
+    { WWT_IMGBTN,           1,  8,      FINANCES_WIDTH - 9,     0,  13,                     0xFFFFFFFF,                             STR_START_THIS_MARKETING_CAMPAIGN },
     { WIDGETS_END },
 };
 
@@ -517,7 +525,7 @@ rct_window * window_finances_open()
 
     w = window_bring_to_front_by_class(WC_FINANCES);
     if (w == nullptr) {
-        w = window_create_auto_pos(530, 290, _windowFinancesPageEvents[0], WC_FINANCES, WF_10);
+        w = window_create_auto_pos(FINANCES_WIDTH, FINANCES_HEIGHT, _windowFinancesPageEvents[0], WC_FINANCES, WF_10);
         w->number = 0;
         w->frame_no = 0;
 
@@ -526,8 +534,8 @@ rct_window * window_finances_open()
 
     w->page = WINDOW_FINANCES_PAGE_SUMMARY;
     window_invalidate(w);
-    w->width = 530;
-    w->height = 290;
+    w->width = FINANCES_WIDTH;
+    w->height = FINANCES_HEIGHT;
     window_invalidate(w);
 
     w->widgets = _windowFinancesPageWidgets[WINDOW_FINANCES_PAGE_SUMMARY];
@@ -640,20 +648,36 @@ static void window_finances_summary_paint(rct_window *w, rct_drawpixelinfo *dpi)
     draw_string_left_underline(dpi, STR_FINANCES_SUMMARY_EXPENDITURE_INCOME, nullptr, COLOUR_BLACK, x, y);
     y += 14;
 
+#ifdef __3DS__
+    sint32 cellHeight = 10;
+    sint32 tableWidth = w->width - 16;
+    sint32 loanY = w->height - 23;
+    sint32 ruleY = loanY - 7;
+#else
+    sint32 cellHeight = TABLE_CELL_HEIGHT;
+    sint32 tableWidth = 513;
+    sint32 loanY = 259;
+    sint32 ruleY = 252;
+#endif
+
     // Expenditure / Income row labels
     for (i = 0; i < RCT_EXPENDITURE_TYPE_COUNT; i++) {
         // Darken every even row
         if (i % 2 == 0)
-            gfx_fill_rect(dpi, x, y - 1, x + 513 - 2, y + (TABLE_CELL_HEIGHT - 2), ColourMapA[w->colours[1]].lighter | 0x1000000);
+            gfx_fill_rect(dpi, x, y - 1, x + tableWidth - 2, y + (cellHeight - 2), ColourMapA[w->colours[1]].lighter | 0x1000000);
 
         gfx_draw_string_left(dpi, window_finances_summary_row_labels[i], nullptr, COLOUR_BLACK, x, y - 1);
-        y += TABLE_CELL_HEIGHT;
+        y += cellHeight;
     }
 
     // Expenditure / Income values for each month
     x = w->x + 118;
     sint16 currentMonthYear = gDateMonthsElapsed;
+#ifdef __3DS__
+    for (i = 1; i >= 0; i--) {
+#else
     for (i = 4; i >= 0; i--) {
+#endif
         y = w->y + 51;
 
         sint16 monthyear = currentMonthYear - i;
@@ -690,7 +714,7 @@ static void window_finances_summary_paint(rct_window *w, rct_drawpixelinfo *dpi)
                     y
                 );
             }
-            y += TABLE_CELL_HEIGHT;
+            y += cellHeight;
         }
         y += 4;
 
@@ -709,12 +733,12 @@ static void window_finances_summary_paint(rct_window *w, rct_drawpixelinfo *dpi)
     }
 
     // Horizontal rule below expenditure / income table
-    gfx_fill_rect_inset(dpi, w->x + 8, w->y + 252, w->x + 8 + 513, w->y + 252 + 1, w->colours[1], INSET_RECT_FLAG_BORDER_INSET);
+    gfx_fill_rect_inset(dpi, w->x + 8, w->y + ruleY, w->x + 8 + tableWidth, w->y + ruleY + 1, w->colours[1], INSET_RECT_FLAG_BORDER_INSET);
 
     // Loan and interest rate
-    gfx_draw_string_left(dpi, STR_FINANCES_SUMMARY_LOAN, nullptr, COLOUR_BLACK, w->x + 8, w->y + 259);
+    gfx_draw_string_left(dpi, STR_FINANCES_SUMMARY_LOAN, nullptr, COLOUR_BLACK, w->x + 8, w->y + loanY);
     set_format_arg(0, uint16, gBankLoanInterestRate);
-    gfx_draw_string_left(dpi, STR_FINANCES_SUMMARY_AT_X_PER_YEAR, gCommonFormatArgs, COLOUR_BLACK, w->x + 160, w->y + 259);
+    gfx_draw_string_left(dpi, STR_FINANCES_SUMMARY_AT_X_PER_YEAR, gCommonFormatArgs, COLOUR_BLACK, w->x + 160, w->y + loanY);
 
     // Current cash
     rct_string_id stringId = gCash >= 0 ? STR_CASH_LABEL : STR_CASH_NEGATIVE_LABEL;
@@ -1373,12 +1397,9 @@ static void window_finances_set_page(rct_window *w, sint32 page)
     if (w->page == WINDOW_FINANCES_PAGE_RESEARCH) {
         w->width = 320;
         w->height = 207;
-    } else if (w->page == WINDOW_FINANCES_PAGE_SUMMARY) {
-        w->width = 530;
-        w->height = 290;
     } else {
-        w->width = 530;
-        w->height = 257;
+        w->width = FINANCES_WIDTH;
+        w->height = FINANCES_HEIGHT;
     }
     window_event_resize_call(w);
     window_event_invalidate_call(w);

@@ -23,6 +23,8 @@
 #define MINIMUM_TOOL_SIZE         1
 #ifdef __psp2__
 #define MAXIMUM_TOOL_SIZE         8
+#elif defined(__3DS__)
+#define MAXIMUM_TOOL_SIZE         16
 #else
 #define MAXIMUM_TOOL_SIZE         64
 #endif

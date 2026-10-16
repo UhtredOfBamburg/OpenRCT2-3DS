@@ -400,6 +400,7 @@ static void game_handle_input_mouse(sint32 x, sint32 y, sint32 state)
                 break;
             }
 
+            window_event_tool_update_call(w, gCurrentToolWidget.widget_index, x, y);
             window_event_tool_drag_call(w, gCurrentToolWidget.widget_index, x, y);
             break;
         case MOUSE_STATE_LEFT_RELEASE:
@@ -1052,6 +1053,7 @@ static void input_widget_left(sint32 x, sint32 y, rct_window * w, rct_widgetinde
             w = window_find_by_number(gCurrentToolWidget.window_classification, gCurrentToolWidget.window_number);
             if (w != nullptr)
             {
+                window_event_tool_update_call(w, gCurrentToolWidget.widget_index, x, y);
                 window_event_tool_down_call(w, gCurrentToolWidget.widget_index, x, y);
                 _inputFlags |= INPUT_FLAG_4;
             }

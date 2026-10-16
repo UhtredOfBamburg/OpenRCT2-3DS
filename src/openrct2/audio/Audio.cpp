@@ -346,6 +346,7 @@ void audio_init_ride_sounds_and_info()
     sint32 deviceNum = 0;
     audio_init_ride_sounds(deviceNum);
 
+#ifndef __3DS__
     for (auto &rideMusicInfo : gRideMusicInfoList)
     {
         const utf8 * path = context_get_path_legacy(rideMusicInfo.path_id);
@@ -370,6 +371,7 @@ void audio_init_ride_sounds_and_info()
             }
         }
     }
+#endif
 }
 
 void audio_init_ride_sounds(sint32 device)

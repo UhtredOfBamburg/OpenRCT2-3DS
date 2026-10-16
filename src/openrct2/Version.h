@@ -73,6 +73,9 @@
 #ifdef __psp2__
     #define OPENRCT2_PLATFORM       "PS Vita"
 #endif
+#ifdef __3DS__
+    #define OPENRCT2_PLATFORM       "Nintendo 3DS"
+#endif
 #ifndef OPENRCT2_PLATFORM
     #error Unknown platform!
 #endif

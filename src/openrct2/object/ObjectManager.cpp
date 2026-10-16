@@ -33,6 +33,8 @@
 
 #include "ObjectList.h"
 
+static bool sDeferSceneryGroupUpdate = false;
+
 class ObjectManager final : public IObjectManager
 {
 private:
@@ -133,8 +135,11 @@ public:
                             _loadedObjects.resize(slot + 1);
                         }
                         _loadedObjects[slot] = loadedObject;
-                        UpdateSceneryGroupIndexes();
-                        reset_type_to_ride_entry_index_map();
+                        if (!sDeferSceneryGroupUpdate)
+                        {
+                            UpdateSceneryGroupIndexes();
+                            reset_type_to_ride_entry_index_map();
+                        }
                     }
                 }
             }
@@ -362,7 +367,8 @@ private:
         log_verbose("%u / %u objects unloaded", numObjectsUnloaded, totalObjectsLoaded);
     }
 
-    void UpdateSceneryGroupIndexes()
+public:
+    void UpdateSceneryGroupIndexes() override
     {
         for (auto loadedObject : _loadedObjects)
         {
@@ -633,4 +639,19 @@ rct_string_id object_manager_get_source_game_string(const rct_object_entry * ent
 {
     return ObjectManager::GetObjectSourceGameString(entry);
 }
+
+void object_manager_defer_updates(bool defer)
+{
+    sDeferSceneryGroupUpdate = defer;
+    if (!defer)
+    {
+        IObjectManager * objectManager = GetObjectManager();
+        if (objectManager != nullptr)
+        {
+            objectManager->UpdateSceneryGroupIndexes();
+            reset_type_to_ride_entry_index_map();
+        }
+    }
+}
+
 

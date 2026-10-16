@@ -31,10 +31,17 @@ namespace OpenRCT2 { namespace Audio
     public:
         AudioContext()
         {
+#ifdef __3DS__
+            if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+            {
+                log_warning("SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s", SDL_GetError());
+            }
+#else
             if (SDL_Init(SDL_INIT_AUDIO) < 0)
             {
                 SDLException::Throw("SDL_Init(SDL_INIT_AUDIO)");
             }
+#endif
             _audioMixer = AudioMixer::Create();
         }
 

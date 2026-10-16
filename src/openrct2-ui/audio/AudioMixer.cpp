@@ -87,8 +87,17 @@ namespace OpenRCT2 { namespace Audio
             };
             want.userdata = this;
 
-            SDL_AudioSpec have;
+            SDL_AudioSpec have = want;
             _deviceId = SDL_OpenAudioDevice(device, 0, &want, &have, 0);
+            if (_deviceId == 0)
+            {
+                log_warning("SDL_OpenAudioDevice failed: %s", SDL_GetError());
+                for (size_t i = 0; i < Util::CountOf(_css1Sources); i++)
+                {
+                    _css1Sources[i] = _nullSource;
+                }
+                return;
+            }
             _format.format = have.format;
             _format.channels = have.channels;
             _format.freq = have.freq;
@@ -109,7 +118,11 @@ namespace OpenRCT2 { namespace Audio
             _channels.clear();
             Unlock();
 
-            SDL_CloseAudioDevice(_deviceId);
+            if (_deviceId != 0)
+            {
+                SDL_CloseAudioDevice(_deviceId);
+                _deviceId = 0;
+            }
 
             // Free sources
             for (size_t i = 0; i < Util::CountOf(_css1Sources); i++)
@@ -138,16 +151,26 @@ namespace OpenRCT2 { namespace Audio
 
         void Lock() override
         {
-            SDL_LockAudioDevice(_deviceId);
+            if (_deviceId != 0)
+            {
+                SDL_LockAudioDevice(_deviceId);
+            }
         }
 
         void Unlock() override
         {
-            SDL_UnlockAudioDevice(_deviceId);
+            if (_deviceId != 0)
+            {
+                SDL_UnlockAudioDevice(_deviceId);
+            }
         }
 
         IAudioChannel * Play(IAudioSource * source, sint32 loop, bool deleteondone, bool deletesourceondone) override
         {
+            if (_deviceId == 0 || source == nullptr)
+            {
+                return nullptr;
+            }
             Lock();
             ISDLAudioChannel * channel = AudioChannel::Create();
             if (channel != nullptr)
@@ -210,7 +233,11 @@ namespace OpenRCT2 { namespace Audio
             const utf8 * css1Path = context_get_path_legacy(PATH_ID_CSS1);
             for (size_t i = 0; i < Util::CountOf(_css1Sources); i++)
             {
+#ifdef __3DS__
+                auto source = AudioSource::CreateMemoryFromCSS1(css1Path, i, nullptr);
+#else
                 auto source = AudioSource::CreateMemoryFromCSS1(css1Path, i, &_format);
+#endif
                 if (source == nullptr)
                 {
                     source = _nullSource;

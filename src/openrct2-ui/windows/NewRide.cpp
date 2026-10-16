@@ -40,8 +40,15 @@
 #include <openrct2/windows/Intent.h>
 
 #define AVAILABILITY_STRING_SIZE 256
+#ifdef __3DS__
+#define WH 224
+#define WW 316
+#define NEW_RIDE_COLS 2
+#else
 #define WH 382
 #define WW 601
+#define NEW_RIDE_COLS 5
+#endif
 
 static uint8 _windowNewRideCurrentTab;
 static ride_list_item _windowNewRideHighlightedItem[6];
@@ -185,10 +192,10 @@ enum {
 };
 
 static rct_widget window_new_ride_widgets[] = {
-    { WWT_FRAME,            0,  0,      600,    0,      WH - 1, 0xFFFFFFFF,                             STR_NONE                            },
-    { WWT_CAPTION,          0,  1,      599,    1,      14,     0xFFFFFFFF,                             STR_WINDOW_TITLE_TIP                },
-    { WWT_CLOSEBOX,         0,  588,    598,    2,      13,     STR_CLOSE_X,                            STR_CLOSE_WINDOW_TIP                },
-    { WWT_RESIZE,           1,  0,      600,    43,     WH - 1, 0xFFFFFFFF,                             STR_NONE                            },
+    { WWT_FRAME,            0,  0,      WW - 1, 0,      WH - 1, 0xFFFFFFFF,                             STR_NONE                            },
+    { WWT_CAPTION,          0,  1,      WW - 2, 1,      14,     0xFFFFFFFF,                             STR_WINDOW_TITLE_TIP                },
+    { WWT_CLOSEBOX,         0,  WW - 13,WW - 3, 2,      13,     STR_CLOSE_X,                            STR_CLOSE_WINDOW_TIP                },
+    { WWT_RESIZE,           1,  0,      WW - 1, 43,     WH - 1, 0xFFFFFFFF,                             STR_NONE                            },
     { WWT_TAB,              1,  3,      33,     17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_TRANSPORT_RIDES_TIP             },
     { WWT_TAB,              1,  34,     64,     17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_GENTLE_RIDES_TIP                },
     { WWT_TAB,              1,  65,     95,     17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_ROLLER_COASTERS_TIP             },
@@ -196,7 +203,11 @@ static rct_widget window_new_ride_widgets[] = {
     { WWT_TAB,              1,  127,    157,    17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_WATER_RIDES_TIP                 },
     { WWT_TAB,              1,  158,    188,    17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_SHOPS_STALLS_TIP                },
     { WWT_TAB,              1,  189,    219,    17,     43,     IMAGE_TYPE_REMAP | SPR_TAB,                   STR_RESEARCH_AND_DEVELOPMENT_TIP    },
+#ifdef __3DS__
+    { WWT_SCROLL,           1,  3,      312,    46,     158,    SCROLL_VERTICAL,                                    STR_NONE                            },
+#else
     { WWT_SCROLL,           1,  3,      597,    46,     317,    SCROLL_VERTICAL,                                    STR_NONE                            },
+#endif
     { WWT_GROUPBOX,         2,  3,      292,    47,     116,    STR_CURRENTLY_IN_DEVELOPMENT,           STR_NONE                            },
     { WWT_GROUPBOX,         2,  3,      292,    124,    188,    STR_LAST_DEVELOPMENT,                   STR_NONE                            },
     { WWT_FLATBTN,          2,  265,    288,    161,    184,    0xFFFFFFFF,                             STR_RESEARCH_SHOW_DETAILS_TIP       },
@@ -436,7 +447,7 @@ static void window_new_ride_scroll_to_focused_ride(rct_window *w)
     ride_list_item *listItem = _windowNewRideListItems;
     while (listItem->type != RIDE_TYPE_NULL || listItem->entry_index != 255) {
         if (listItem->type == focusRideType) {
-            row = count / 5;
+            row = count / NEW_RIDE_COLS;
             break;
         }
 
@@ -599,7 +610,7 @@ static void window_new_ride_refresh_widget_sizing(rct_window *w)
         window_new_ride_widgets[WIDX_LAST_DEVELOPMENT_BUTTON].type = WWT_EMPTY;
         window_new_ride_widgets[WIDX_RESEARCH_FUNDING_BUTTON].type = WWT_EMPTY;
 
-        width = 601;
+        width = WW;
         height = WH;
     } else {
         window_new_ride_widgets[WIDX_RIDE_LIST].type = WWT_EMPTY;
@@ -736,7 +747,7 @@ static void window_new_ride_scrollgetsize(rct_window *w, sint32 scrollIndex, sin
         count++;
         listItem++;
     }
-    *height = ((count + 4) / 5) * 116;
+    *height = ((count + (NEW_RIDE_COLS - 1)) / NEW_RIDE_COLS) * 116;
 }
 
 /**
@@ -872,7 +883,7 @@ static void window_new_ride_scrollpaint(rct_window *w, rct_drawpixelinfo *dpi, s
 
         // Next position
         x += 116;
-        if (x >= 116 * 5 + 1) {
+        if (x >= 116 * NEW_RIDE_COLS + 1) {
             x = 1;
             y += 116;
         }
@@ -897,10 +908,10 @@ static ride_list_item window_new_ride_scroll_get_ride_list_item_at(rct_window *w
 
     sint32 column = x / 116;
     sint32 row = y / 116;
-    if (column >= 5)
+    if (column >= NEW_RIDE_COLS)
         return result;
 
-    sint32 index = column + (row * 5);
+    sint32 index = column + (row * NEW_RIDE_COLS);
 
     ride_list_item *listItem = _windowNewRideListItems;
     while (listItem->type != RIDE_TYPE_NULL || listItem->entry_index != 255) {

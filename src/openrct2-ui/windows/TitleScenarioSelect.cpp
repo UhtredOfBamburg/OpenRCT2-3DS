@@ -175,11 +175,16 @@ rct_window * window_scenarioselect_open(scenarioselect_callback callback, bool t
     // Load scenario list
     scenario_repository_scan();
 
+#ifdef __3DS__
+    windowWidth = 316;
+    windowHeight = 220;
+#else
     // Shrink the window if we're showing scenarios by difficulty level.
     if (gConfigGeneral.scenario_select_mode == SCENARIO_SELECT_MODE_DIFFICULTY && !_titleEditor)
         windowWidth = 610;
     else
         windowWidth = 733;
+#endif
 
     window = window_create_centred(
         windowWidth,
@@ -236,6 +241,23 @@ static void window_scenarioselect_init_tabs(rct_window *w)
         w->selected_tab = firstPage;
     }
 
+#ifdef __3DS__
+    sint32 x = 3;
+    for (sint32 i = 0; i < 8; i++) {
+        rct_widget* widget = &w->widgets[i + WIDX_TAB1];
+        if (!(showPages & (1 << i))) {
+            widget->type = WWT_EMPTY;
+            continue;
+        }
+
+        widget->type = WWT_TAB;
+        widget->left = x;
+        widget->right = x + 37;
+        widget->top = 17;
+        widget->bottom = 36;
+        x += 38;
+    }
+#else
     sint32 x = 3;
     for (sint32 i = 0; i < 8; i++) {
         rct_widget* widget = &w->widgets[i + WIDX_TAB1];
@@ -249,6 +271,7 @@ static void window_scenarioselect_init_tabs(rct_window *w)
         widget->right = x + 90;
         x += 91;
     }
+#endif
 }
 
 static void window_scenarioselect_close(rct_window *w)
@@ -382,7 +405,13 @@ static void window_scenarioselect_invalidate(rct_window *w)
     window_scenarioselect_widgets[WIDX_CLOSE].left  = windowWidth - 13;
     window_scenarioselect_widgets[WIDX_CLOSE].right = windowWidth - 3;
     window_scenarioselect_widgets[WIDX_TABCONTENT].right = windowWidth - 1;
+#ifdef __3DS__
+    window_scenarioselect_widgets[WIDX_TABCONTENT].top = 37;
+    window_scenarioselect_widgets[WIDX_SCENARIOLIST].top = 40;
+    window_scenarioselect_widgets[WIDX_SCENARIOLIST].right = windowWidth - 125;
+#else
     window_scenarioselect_widgets[WIDX_SCENARIOLIST].right = windowWidth - 179;
+#endif
 
     sint32 windowHeight = w->height;
     window_scenarioselect_widgets[WIDX_BACKGROUND].bottom = windowHeight - 1;
@@ -415,8 +444,20 @@ static void window_scenarioselect_paint(rct_window *w, rct_drawpixelinfo *dpi)
         } else { // old-style
             set_format_arg(0, rct_string_id, ScenarioCategoryStringIds[i]);
         }
+#ifdef __3DS__
+        gfx_draw_string_centred_wrapped(dpi, gCommonFormatArgs, x, y, 36, STR_SMALL_WINDOW_COLOUR_2_STRINGID, COLOUR_AQUAMARINE);
+#else
         gfx_draw_string_centred_wrapped(dpi, gCommonFormatArgs, x, y, 87, format, COLOUR_AQUAMARINE);
+#endif
     }
+
+#ifdef __3DS__
+    constexpr sint32 detailWidth = 118;
+    constexpr sint32 detailCenter = 58;
+#else
+    constexpr sint32 detailWidth = 170;
+    constexpr sint32 detailCenter = 85;
+#endif
 
     // Return if no scenario highlighted
     scenario = w->highlighted_scenario;
@@ -425,9 +466,9 @@ static void window_scenarioselect_paint(rct_window *w, rct_drawpixelinfo *dpi)
             // Show locked information
             sint32 x = w->x + window_scenarioselect_widgets[WIDX_SCENARIOLIST].right + 4;
             sint32 y = w->y + window_scenarioselect_widgets[WIDX_TABCONTENT].top + 5;
-            gfx_draw_string_centred_clipped(dpi, STR_SCENARIO_LOCKED, nullptr, COLOUR_BLACK, x + 85, y, 170);
+            gfx_draw_string_centred_clipped(dpi, STR_SCENARIO_LOCKED, nullptr, COLOUR_BLACK, x + detailCenter, y, detailWidth);
             y += 15;
-            y += gfx_draw_string_left_wrapped(dpi, nullptr, x, y, 170, STR_SCENARIO_LOCKED_DESC, COLOUR_BLACK) + 5;
+            y += gfx_draw_string_left_wrapped(dpi, nullptr, x, y, detailWidth, STR_SCENARIO_LOCKED_DESC, COLOUR_BLACK) + 5;
         }
         return;
     }
@@ -448,20 +489,20 @@ static void window_scenarioselect_paint(rct_window *w, rct_drawpixelinfo *dpi)
     sint32 y = w->y + window_scenarioselect_widgets[WIDX_TABCONTENT].top + 5;
     set_format_arg(0, rct_string_id, STR_STRING);
     set_format_arg(2, const char *, scenario->name);
-    gfx_draw_string_centred_clipped(dpi, STR_WINDOW_COLOUR_2_STRINGID, gCommonFormatArgs, COLOUR_BLACK, x + 85, y, 170);
+    gfx_draw_string_centred_clipped(dpi, STR_WINDOW_COLOUR_2_STRINGID, gCommonFormatArgs, COLOUR_BLACK, x + detailCenter, y, detailWidth);
     y += 15;
 
     // Scenario details
     set_format_arg(0, rct_string_id, STR_STRING);
     set_format_arg(2, const char *, scenario->details);
-    y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, 170, STR_BLACK_STRING, COLOUR_BLACK) + 5;
+    y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, detailWidth, STR_BLACK_STRING, COLOUR_BLACK) + 5;
 
     // Scenario objective
     set_format_arg(0, rct_string_id, ObjectiveNames[scenario->objective_type]);
     set_format_arg(2, sint16, scenario->objective_arg_3);
     set_format_arg(4, sint16, date_get_total_months(MONTH_OCTOBER, scenario->objective_arg_1));
     set_format_arg(6, sint32, scenario->objective_arg_2);
-    y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, 170, STR_OBJECTIVE, COLOUR_BLACK) + 5;
+    y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, detailWidth, STR_OBJECTIVE, COLOUR_BLACK) + 5;
 
     // Scenario score
     if (scenario->highscore != nullptr) {
@@ -473,7 +514,7 @@ static void window_scenarioselect_paint(rct_window *w, rct_drawpixelinfo *dpi)
         set_format_arg(0, rct_string_id, STR_STRING);
         set_format_arg(2, const char *, completedByName);
         set_format_arg(2 + sizeof(const char *), money32, scenario->highscore->company_value);
-        y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, 170, STR_COMPLETED_BY_WITH_COMPANY_VALUE, COLOUR_BLACK);
+        y += gfx_draw_string_left_wrapped(dpi, gCommonFormatArgs, x, y, detailWidth, STR_COMPLETED_BY_WITH_COMPANY_VALUE, COLOUR_BLACK);
     }
 }
 
@@ -530,12 +571,20 @@ static void window_scenarioselect_scrollpaint(rct_window *w, rct_drawpixelinfo *
             if (isDisabled) {
                 gCurrentFontSpriteBase = FONT_SPRITE_BASE_MEDIUM_DARK;
             }
-            gfx_draw_string_centred(dpi, format, wide ? 270 : 210, y + 1, colour, gCommonFormatArgs);
+#ifdef __3DS__
+            const sint32 scenarioCentreX = 88;
+            const sint32 checkmarkX = 162;
+            (void)wide;
+#else
+            const sint32 scenarioCentreX = wide ? 270 : 210;
+            const sint32 checkmarkX = wide ? 500 : 395;
+#endif
+            gfx_draw_string_centred(dpi, format, scenarioCentreX, y + 1, colour, gCommonFormatArgs);
 
             // Check if scenario is completed
             if (isCompleted) {
                 // Draw completion tick
-                gfx_draw_sprite(dpi, SPR_MENU_CHECKMARK, wide ? 500 : 395, y + 1, 0);
+                gfx_draw_sprite(dpi, SPR_MENU_CHECKMARK, checkmarkX, y + 1, 0);
 
                 // Draw completion score
                 const utf8 *completedByName = "???";
@@ -546,7 +595,7 @@ static void window_scenarioselect_scrollpaint(rct_window *w, rct_drawpixelinfo *
                 set_format_arg(0, rct_string_id, STR_COMPLETED_BY);
                 set_format_arg(2, rct_string_id, STR_STRING);
                 set_format_arg(4, char *, buffer);
-                gfx_draw_string_centred(dpi, format, wide ? 270 : 210, y + 11, COLOUR_BLACK, gCommonFormatArgs);
+                gfx_draw_string_centred(dpi, format, scenarioCentreX, y + 11, COLOUR_BLACK, gCommonFormatArgs);
             }
 
             y += 24;

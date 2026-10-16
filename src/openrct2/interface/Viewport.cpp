@@ -409,6 +409,10 @@ static void viewport_shift_pixels(rct_drawpixelinfo *dpi, rct_window* w, rct_vie
     viewport_redraw_after_shift(dpi, w, viewport, x_diff, y_diff);
 }
 
+#ifdef __3DS__
+extern uint8 g3dsDualScreenMode;
+#endif
+
 static void viewport_move(sint16 x, sint16 y, rct_window* w, rct_viewport* viewport)
 {
     uint8 zoom = (1 << viewport->zoom);
@@ -424,6 +428,13 @@ static void viewport_move(sint16 x, sint16 y, rct_window* w, rct_viewport* viewp
 
     // If no change in viewing area
     if ((!x_diff) && (!y_diff))return;
+
+#ifdef __3DS__
+    if (w->classification == WC_MAIN_WINDOW && !(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO))
+    {
+        gfx_set_dirty_blocks(0, 0, 400, 240);
+    }
+#endif
 
     if (w->flags & WF_7){
         sint32 left = std::max<sint32>(viewport->x, 0);
@@ -1575,6 +1586,11 @@ void viewport_invalidate(rct_viewport *viewport, sint32 left, sint32 top, sint32
 
     if (viewport->visibility == VC_COVERED) return;
 
+    sint32 origLeft = left;
+    sint32 origTop = top;
+    sint32 origRight = right;
+    sint32 origBottom = bottom;
+
     sint32 viewportLeft = viewport->view_x;
     sint32 viewportTop = viewport->view_y;
     sint32 viewportRight = viewport->view_x + viewport->view_width;
@@ -1600,6 +1616,36 @@ void viewport_invalidate(rct_viewport *viewport, sint32 left, sint32 top, sint32
         bottom += viewport->y;
         gfx_set_dirty_blocks(left, top, right, bottom);
     }
+
+#ifdef __3DS__
+    if (viewport->y == 240 && viewport->width == 320 && !(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO))
+    {
+        uint8 zoomOffset = (g3dsDualScreenMode == 0) ? 1 : 0;
+        uint8 topZoomLevel = std::min<uint8>(viewport->zoom + zoomOffset, 3);
+        sint32 topViewW = 400 << topZoomLevel;
+        sint32 topViewH = 240 << topZoomLevel;
+        sint32 centerViewX = viewport->view_x + (viewport->view_width / 2);
+        sint32 centerViewY = viewport->view_y + (viewport->view_height / 2);
+        sint32 topLeft = centerViewX - (topViewW / 2);
+        sint32 topTop = centerViewY - (topViewH / 2);
+        sint32 topRight = topLeft + topViewW;
+        sint32 topBottom = topTop + topViewH;
+
+        if (origRight > topLeft && origBottom > topTop && origLeft < topRight && origTop < topBottom)
+        {
+            sint32 tl = std::max(origLeft, topLeft) - topLeft;
+            sint32 tt = std::max(origTop, topTop) - topTop;
+            sint32 tr = std::min(origRight, topRight) - topLeft;
+            sint32 tb = std::min(origBottom, topBottom) - topTop;
+            uint8 topZoomDiv = 1 << topZoomLevel;
+            tl /= topZoomDiv;
+            tt /= topZoomDiv;
+            tr /= topZoomDiv;
+            tb /= topZoomDiv;
+            gfx_set_dirty_blocks(tl, tt, tr, tb);
+        }
+    }
+#endif
 }
 
 static rct_viewport *viewport_find_from_point(sint32 screenX, sint32 screenY)

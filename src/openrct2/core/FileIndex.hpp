@@ -27,6 +27,10 @@
 #include "MemoryStream.h"
 #include "Path.hpp"
 
+#ifdef __3DS__
+extern "C" void n3ds_draw_loading_progress(int current, int total);
+#endif
+
 template<typename TItem>
 class FileIndex
 {
@@ -108,6 +112,17 @@ public:
     std::vector<TItem> LoadOrBuild() const
     {
         std::vector<TItem> items;
+#ifdef __3DS__
+        if (File::Exists(_indexPath))
+        {
+            DirectoryStats dummyStats {};
+            auto fastRead = ReadIndexFile(dummyStats);
+            if (std::get<0>(fastRead))
+            {
+                return std::get<1>(fastRead);
+            }
+        }
+#endif
         auto scanResult = Scan();
         auto readIndexResult = ReadIndexFile(scanResult.Stats);
         if (std::get<0>(readIndexResult))
@@ -188,6 +203,12 @@ private:
         size_t i = 1;
         for (auto filePath : scanResult.Files)
         {
+#ifdef __3DS__
+            if ((i & 15) == 1 || i == scanResult.Files.size())
+            {
+                n3ds_draw_loading_progress((int)i, (int)scanResult.Files.size());
+            }
+#endif
             Console::WriteFormat("File %5d of %d, done %3d%%\r", i, scanResult.Files.size(), i * 100 / scanResult.Files.size());
             i++;
             log_verbose("FileIndex:Indexing '%s'", filePath.c_str());
@@ -227,13 +248,17 @@ private:
                     header.MagicNumber == _magicNumber &&
                     header.VersionA == FILE_INDEX_VERSION &&
                     header.VersionB == _version &&
-                    header.LanguageId == gCurrentLanguage &&
-                    header.Stats.TotalFiles == stats.TotalFiles &&
-#ifndef __psp2__ //slows down too much, see FileScanner.cpp
-                    header.Stats.TotalFileSize == stats.TotalFileSize &&
-                    header.Stats.FileDateModifiedChecksum == stats.FileDateModifiedChecksum &&
+                    header.LanguageId == gCurrentLanguage
+#if !defined(__psp2__) && !defined(__3DS__)
+                    && header.Stats.TotalFiles == stats.TotalFiles
+                    && header.Stats.TotalFileSize == stats.TotalFileSize
+                    && header.Stats.FileDateModifiedChecksum == stats.FileDateModifiedChecksum
+                    && header.Stats.PathChecksum == stats.PathChecksum
+#elif defined(__psp2__)
+                    && header.Stats.TotalFiles == stats.TotalFiles
+                    && header.Stats.PathChecksum == stats.PathChecksum
 #endif
-                    header.Stats.PathChecksum == stats.PathChecksum)
+                    )
                 {
                     // Directory is the same, just read the saved items
                     for (uint32 i = 0; i < header.NumItems; i++)

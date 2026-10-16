@@ -18,7 +18,9 @@
 #include <vector>
 #include <openrct2/common.h>
 #include <SDL2/SDL.h>
+#ifdef __psp2__
 #include <SDL2/SDL_image.h>
+#endif
 #include <openrct2/config/Config.h>
 #include <openrct2/drawing/IDrawingEngine.h>
 #include <openrct2/drawing/X8DrawingEngine.h>
@@ -174,7 +176,7 @@ public:
             _screenTexture = SDL_CreateTexture(_sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
         }        
         // log_warning("HWDisplayDrawingEngine::Resize error: %s", SDL_GetError());
-        uint32 format;
+        Uint32 format;
         SDL_QueryTexture(_screenTexture, &format, nullptr, nullptr, nullptr);
         _screenTextureFormat = SDL_AllocFormat(format);
 
@@ -442,5 +444,9 @@ private:
 
 IDrawingEngine * OpenRCT2::Ui::CreateHardwareDisplayDrawingEngine(IUiContext * uiContext)
 {
+#ifdef __3DS__
+    return CreateSoftwareDrawingEngine(uiContext);
+#else
     return new HardwareDisplayDrawingEngine(uiContext);
+#endif
 }

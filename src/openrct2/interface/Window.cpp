@@ -63,6 +63,18 @@ uint16 gWindowMapFlashingFlags;
 
 colour_t gCurrentWindowColours[4];
 
+#ifdef __3DS__
+uint8 g3dsDualScreenMode = 1; // 1 = 1:1 Cinema Top + Interactive Bottom (Default), 0 = Panoramic Top + Interactive Bottom
+
+void window_3ds_toggle_dual_screen_mode()
+{
+    g3dsDualScreenMode ^= 1;
+    audio_play_sound(SOUND_CLICK_1, 0, 200);
+    window_resize_gui(context_get_width(), context_get_height());
+    gfx_invalidate_screen();
+}
+#endif
+
 // converted from uint16 values at 0x009A41EC - 0x009A4230
 // these are percentage coordinates of the viewport to centre to, if a window is obscuring a location, the next is tried
 static constexpr const float window_scroll_locations[][2] = {
@@ -159,6 +171,13 @@ void window_update_all()
     // gfx_draw_all_dirty_blocks();
     // window_update_all_viewports();
     // gfx_draw_all_dirty_blocks();
+
+#ifdef __3DS__
+    if (g3dsDualScreenMode == 1 && !(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO) && ((gCurrentTicks & 3) == 0))
+    {
+        gfx_set_dirty_blocks(0, 0, 400, 240);
+    }
+#endif
 
     // 1000 tick update
     gWindowUpdateTicks += gTicksSinceLastUpdate;
@@ -438,6 +457,79 @@ rct_window *window_create(sint32 x, sint32 y, sint32 width, sint32 height, rct_w
     }
 
     w->number = 0;
+#ifdef __3DS__
+    if (cls != WC_MAIN_WINDOW)
+    {
+        switch (cls)
+        {
+        case WC_TOP_TOOLBAR:
+            x = 40;
+            y = 240;
+            width = 320;
+            break;
+        case WC_BOTTOM_TOOLBAR:
+            x = 0;
+            y = 240 - height;
+            width = 400;
+            break;
+        case WC_DROPDOWN:
+            if (x < 40) x = 40;
+            if (x + width > 360) x = Math::Max<sint32>(40, 360 - width);
+            if (y < 240) y = 240;
+            if (y + height > 480) y = Math::Max<sint32>(240, 480 - height);
+            break;
+        case WC_TITLE_LOGO:
+            x = (400 - width) / 2; // centered horizontally on Top Screen
+            y = 12;                // Top Screen above park demo
+            break;
+        case WC_TITLE_MENU:
+            x = 40 + (320 - width) / 2; // centered horizontally on Bottom Screen
+            y = 295;                    // vertical center of Bottom Screen (no overlap)
+            break;
+        case WC_TITLE_OPTIONS:
+            x = 40 + 320 - width - 5;   // top-right of Bottom Screen
+            y = 244;
+            break;
+        case WC_TITLE_EXIT:
+            x = 40 + 320 - width - 5;   // bottom-right of Bottom Screen
+            y = 480 - height - 5;
+            break;
+        case WC_LAND:
+        case WC_WATER:
+        case WC_CLEAR_SCENERY:
+        case WC_FOOTPATH:
+        case WC_TRACK_DESIGN_PLACE:
+            // Dock compact construction & terrain toolboxes to the right edge of the Bottom Screen
+            // so the left 70%+ of the park terrain remains completely open for the stylus!
+            if (width > 316) width = 316;
+            if (height > 184) height = 184;
+            x = 360 - width;
+            y = 296;
+            break;
+        default:
+            // 3DS Handheld UI: clamp dialog windows to fit bottom screen (320x240)
+            if (width > 316)
+            {
+                width = 316;
+            }
+            if (height > 234)
+            {
+                height = 234;
+            }
+
+            // Center within bottom screen [x: 40..359, y: 240..479]
+            if (x < 40 || x + width > 360)
+            {
+                x = 40 + (320 - width) / 2;
+            }
+            if (y < 240 || y + height > 480)
+            {
+                y = 240 + (240 - height) / 2;
+            }
+            break;
+        }
+    }
+#endif
     w->x = x;
     w->y = y;
     w->width = width;
@@ -548,27 +640,15 @@ static bool window_fits_between_others(sint32 x, sint32 y, sint32 width, sint32 
  */
 rct_window *window_create_auto_pos(sint32 width, sint32 height, rct_window_event_list *event_handlers, rct_windowclass cls, uint16 flags)
 {
+#ifdef __3DS__
+    sint32 w = std::min<sint32>(width, 316);
+    sint32 h = std::min<sint32>(height, 234);
+    sint32 x = 40 + (320 - w) / 2;
+    sint32 y = 240 + (240 - h) / 2;
+    return window_create(x, y, w, h, event_handlers, cls, flags);
+#else
     uint16 screenWidth = context_get_width();
     uint16 screenHeight = context_get_height();
-
-    // TODO dead code, looks like it is cascading the new window offset from an existing window
-    // we will have to re-implement this in our own way.
-    //
-    // if (cls & 0x80) {
-    //  cls &= ~0x80;
-    //  rct_window *w = window_find_by_number(0, 0);
-    //  if (w != nullptr) {
-    //      if (w->x > -60 && w->x < screenWidth - 20) {
-    //          if (w->y < screenHeight - 20) {
-    //              sint32 x = w->x;
-    //              if (w->x + width > screenWidth)
-    //                  x = screenWidth - 20 - width;
-    //              sint32 y = w->y;
-    //              return window_create(x + 10, y + 10, width, height, event_handlers, cls, flags);
-    //          }
-    //      }
-    //  }
-    // }
 
     // Place window in an empty corner of the screen
     sint32 x = 0;
@@ -666,16 +746,25 @@ foundSpace:
         x = screenWidth - width;
 
     return window_create(x, y, width, height, event_handlers, cls, flags);
+#endif
 }
 
 rct_window * window_create_centred(sint32 width, sint32 height, rct_window_event_list *event_handlers, rct_windowclass cls, uint16 flags)
 {
+#ifdef __3DS__
+    sint32 w = std::min<sint32>(width, 316);
+    sint32 h = std::min<sint32>(height, 234);
+    sint32 x = 40 + (320 - w) / 2;
+    sint32 y = 240 + (240 - h) / 2;
+    return window_create(x, y, w, h, event_handlers, cls, flags);
+#else
     sint32 screenWidth = context_get_width();
     sint32 screenHeight = context_get_height();
 
     sint32 x = (screenWidth - width) / 2;
     sint32 y = std::max(TOP_TOOLBAR_HEIGHT + 1, (screenHeight - height) / 2);
     return window_create(x, y, width, height, event_handlers, cls, flags);
+#endif
 }
 
 /**
@@ -804,7 +893,11 @@ void window_close_top()
             return;
 
     for (w = RCT2_NEW_WINDOW - 1; w >= g_window_list; w--) {
-        if (!(w->flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT))) {
+#ifdef __3DS__
+        if (w->classification == WC_TOP_TOOLBAR || w->classification == WC_BOTTOM_TOOLBAR || w->classification == WC_MAIN_WINDOW)
+            continue;
+#endif
+        if (!(w->flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT | WF_NO_AUTO_CLOSE))) {
             window_close(w);
             return;
         }
@@ -827,6 +920,10 @@ void window_close_all()
 
     for (rct_window * w = RCT2_LAST_WINDOW; w >= g_window_list; w--)
     {
+#ifdef __3DS__
+        if (w->classification == WC_TOP_TOOLBAR || w->classification == WC_BOTTOM_TOOLBAR || w->classification == WC_MAIN_WINDOW)
+            continue;
+#endif
         if (!(w->flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT)))
         {
             window_close(w);
@@ -841,6 +938,10 @@ void window_close_all_except_class(rct_windowclass cls)
     window_close_by_class(WC_DROPDOWN);
 
     for (w = g_window_list; w <= RCT2_LAST_WINDOW; w++){
+#ifdef __3DS__
+        if (w->classification == WC_TOP_TOOLBAR || w->classification == WC_BOTTOM_TOOLBAR || w->classification == WC_MAIN_WINDOW)
+            continue;
+#endif
         if (w->classification != cls && !(w->flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT))) {
             window_close(w);
             w = g_window_list;
@@ -855,6 +956,13 @@ void window_close_all_except_flags(uint16 flags)
 {
     for (rct_window * w = RCT2_LAST_WINDOW; w >= g_window_list; w--)
     {
+#ifdef __3DS__
+        if ((flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT)) &&
+            (w->classification == WC_TOP_TOOLBAR || w->classification == WC_BOTTOM_TOOLBAR || w->classification == WC_MAIN_WINDOW))
+        {
+            continue;
+        }
+#endif
         if (!(w->flags & flags))
         {
             window_close(w);
@@ -1141,6 +1249,10 @@ sint32 window_get_scroll_data_index(rct_window *w, rct_widgetindex widget_index)
  */
 rct_window *window_bring_to_front(rct_window *w)
 {
+#ifdef __3DS__
+    if (w->classification == WC_TOP_TOOLBAR || w->classification == WC_BOTTOM_TOOLBAR)
+        return w;
+#endif
     if (w->flags & (WF_STICK_TO_BACK | WF_STICK_TO_FRONT))
         return w;
 
@@ -1216,6 +1328,10 @@ rct_window *window_bring_to_front_by_number(rct_windowclass cls, rct_windownumbe
  */
 void window_push_others_right(rct_window* window)
 {
+#ifdef __3DS__
+    UNUSED(window);
+    return;
+#endif
     for (rct_window* w = g_window_list; w < gWindowNextSlot; w++) {
         if (w == window)
             continue;
@@ -1247,6 +1363,10 @@ void window_push_others_right(rct_window* window)
  */
 void window_push_others_below(rct_window *w1)
 {
+#ifdef __3DS__
+    UNUSED(w1);
+    return;
+#endif
     sint32 push_amount;
     rct_window* w2;
 
@@ -2102,6 +2222,11 @@ void window_bubble_list_item(rct_window* w, sint32 item_position){
  * are going to be out of sight.
  */
 void window_relocate_windows(sint32 width, sint32 height){
+#ifdef __3DS__
+    UNUSED(width);
+    UNUSED(height);
+    return;
+#endif
     sint32 new_location = 8;
     for (rct_window* w = g_window_list; w < RCT2_NEW_WINDOW; w++){
 
@@ -2139,6 +2264,83 @@ void window_resize_gui(sint32 width, sint32 height)
         window_resize_gui_scenario_editor(width, height);
         return;
     }
+#ifdef __3DS__
+    rct_window *mainWind = window_get_main();
+    if (mainWind != nullptr) {
+        rct_viewport *viewport = mainWind->viewport;
+        mainWind->x = 0;
+        mainWind->y = 0;
+        mainWind->width = 400;
+        mainWind->height = 480;
+        if (mainWind->widgets != nullptr && mainWind->widgets[WC_MAIN_WINDOW__0].type == WWT_VIEWPORT) {
+            mainWind->widgets[WC_MAIN_WINDOW__0].right = 400;
+            mainWind->widgets[WC_MAIN_WINDOW__0].bottom = 480;
+        }
+        if (viewport != nullptr) {
+            bool isGameplay = !(gScreenFlags & SCREEN_FLAGS_TITLE_DEMO);
+            sint16 targetX = isGameplay ? 40 : 0;
+            sint16 targetY = isGameplay ? 240 : 0;
+            sint16 targetW = isGameplay ? 320 : 400;
+            sint16 targetH = 240;
+
+            if (viewport->x != targetX || viewport->y != targetY || viewport->width != targetW || viewport->height != targetH) {
+                sint32 centerX = mainWind->saved_view_x + viewport->view_width / 2;
+                sint32 centerY = mainWind->saved_view_y + viewport->view_height / 2;
+                viewport->x = targetX;
+                viewport->y = targetY;
+                viewport->width = targetW;
+                viewport->height = targetH;
+                viewport->view_width = targetW << viewport->zoom;
+                viewport->view_height = targetH << viewport->zoom;
+                mainWind->saved_view_x = centerX - viewport->view_width / 2;
+                mainWind->saved_view_y = centerY - viewport->view_height / 2;
+                viewport->view_x = mainWind->saved_view_x;
+                viewport->view_y = mainWind->saved_view_y;
+            }
+        }
+    }
+
+    rct_window *topWind = window_find_by_class(WC_TOP_TOOLBAR);
+    if (topWind != nullptr) {
+        topWind->x = 40;
+        topWind->y = 240;
+        topWind->width = 320;
+    }
+
+    rct_window *bottomWind = window_find_by_class(WC_BOTTOM_TOOLBAR);
+    if (bottomWind != nullptr) {
+        bottomWind->x = 40;
+        bottomWind->y = 480 - 32;
+        bottomWind->width = 320;
+    }
+
+    rct_window *logoWind = window_find_by_class(WC_TITLE_LOGO);
+    if (logoWind != nullptr) {
+        logoWind->x = (400 - logoWind->width) / 2;
+        logoWind->y = 12;
+    }
+
+    rct_window *titleWind = window_find_by_class(WC_TITLE_MENU);
+    if (titleWind != nullptr) {
+        titleWind->x = 40 + (320 - titleWind->width) / 2;
+        titleWind->y = 295;
+    }
+
+    rct_window *exitWind = window_find_by_class(WC_TITLE_EXIT);
+    if (exitWind != nullptr) {
+        exitWind->x = 40 + 320 - exitWind->width - 5;
+        exitWind->y = 480 - exitWind->height - 5;
+    }
+
+    rct_window *optionsWind = window_find_by_class(WC_TITLE_OPTIONS);
+    if (optionsWind != nullptr) {
+        optionsWind->x = 40 + 320 - optionsWind->width - 5;
+        optionsWind->y = 244;
+    }
+
+    gfx_invalidate_screen();
+    return;
+#else
     rct_window *mainWind = window_get_main();
     if (mainWind != nullptr) {
         rct_viewport* viewport = mainWind->viewport;
@@ -2183,6 +2385,7 @@ void window_resize_gui(sint32 width, sint32 height)
     }
 
     gfx_invalidate_screen();
+#endif
 }
 
 /**
@@ -2190,6 +2393,44 @@ void window_resize_gui(sint32 width, sint32 height)
 */
 void window_resize_gui_scenario_editor(sint32 width, sint32 height)
 {
+#ifdef __3DS__
+    rct_window *mainWind = window_get_main();
+    if (mainWind != nullptr) {
+        rct_viewport *viewport = mainWind->viewport;
+        mainWind->x = 0;
+        mainWind->y = 0;
+        mainWind->width = 400;
+        mainWind->height = 480;
+        if (mainWind->widgets != nullptr && mainWind->widgets[WC_MAIN_WINDOW__0].type == WWT_VIEWPORT) {
+            mainWind->widgets[WC_MAIN_WINDOW__0].right = 400;
+            mainWind->widgets[WC_MAIN_WINDOW__0].bottom = 480;
+        }
+        if (viewport != nullptr) {
+            bool isModeB = (g3dsDualScreenMode == 1);
+            viewport->x = isModeB ? 40 : 0;
+            viewport->y = isModeB ? 240 : 0;
+            viewport->width = isModeB ? 320 : 400;
+            viewport->height = 240;
+            viewport->view_width = viewport->width << viewport->zoom;
+            viewport->view_height = viewport->height << viewport->zoom;
+        }
+    }
+
+    rct_window *topWind = window_find_by_class(WC_TOP_TOOLBAR);
+    if (topWind != nullptr) {
+        topWind->x = 40;
+        topWind->y = 240;
+        topWind->width = 320;
+    }
+
+    rct_window *bottomWind = window_find_by_class(WC_BOTTOM_TOOLBAR);
+    if (bottomWind != nullptr) {
+        bottomWind->x = 40;
+        bottomWind->y = 480 - 32;
+        bottomWind->width = 320;
+    }
+    return;
+#else
     rct_window* mainWind = window_get_main();
     if (mainWind != nullptr) {
         rct_viewport* viewport = mainWind->viewport;
@@ -2215,7 +2456,7 @@ void window_resize_gui_scenario_editor(sint32 width, sint32 height)
         bottomWind->y = height - 32;
         bottomWind->width = std::max(640, width);
     }
-
+#endif
 }
 
 /* Based on rct2: 0x6987ED and another version from window_park */
@@ -2446,6 +2687,13 @@ static void window_snap_bottom(rct_window *w, sint32 proximity)
 
 void window_move_and_snap(rct_window *w, sint32 newWindowX, sint32 newWindowY, sint32 snapProximity)
 {
+#ifdef __3DS__
+    UNUSED(snapProximity);
+    newWindowX = Math::Clamp<sint32>(40 - w->width / 2, newWindowX, 360 - w->width / 2);
+    newWindowY = Math::Clamp<sint32>(240, newWindowY, 464);
+    window_set_position(w, newWindowX, newWindowY);
+    return;
+#endif
     sint32 originalX = w->x;
     sint32 originalY = w->y;
     sint32 minY = (gScreenFlags & SCREEN_FLAGS_TITLE_DEMO) ? 1 : TOP_TOOLBAR_HEIGHT + 2;

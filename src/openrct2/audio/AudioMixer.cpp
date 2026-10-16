@@ -138,6 +138,13 @@ void * Mixer_Play_Music(sint32 pathId, sint32 loop, sint32 streaming)
     {
         if (streaming)
         {
+#ifdef __3DS__
+            // Avoid reading sdmc: from the background SDL audio callback thread
+            // while the main thread is loading parks/objects from sdmc:.
+            UNUSED(pathId);
+            UNUSED(loop);
+            return nullptr;
+#else
             const utf8 * path = context_get_path_legacy(pathId);
 
             IAudioContext * audioContext = GetContext()->GetAudioContext();
@@ -150,6 +157,7 @@ void * Mixer_Play_Music(sint32 pathId, sint32 loop, sint32 streaming)
                     delete source;
                 }
             }
+#endif
         }
         else
         {

@@ -188,7 +188,11 @@ rct_window * window_guest_list_open()
     if (window != nullptr)
         return window;
 
+#ifdef __3DS__
+    window = window_create_auto_pos(316, 220, &window_guest_list_events, WC_GUEST_LIST, WF_10 | WF_RESIZABLE);
+#else
     window = window_create_auto_pos(350, 330, &window_guest_list_events, WC_GUEST_LIST, WF_10 | WF_RESIZABLE);
+#endif
     window->widgets = window_guest_list_widgets;
     window->enabled_widgets =
         (1 << WIDX_CLOSE) |
@@ -359,8 +363,13 @@ static void window_guest_list_mouseup(rct_window *w, rct_widgetindex widgetIndex
  */
 static void window_guest_list_resize(rct_window *w)
 {
+#ifdef __3DS__
+    w->min_width = 316;
+    w->min_height = 220;
+#else
     w->min_width = 350;
     w->min_height = 330;
+#endif
     if (w->width < w->min_width) {
         window_invalidate(w);
         w->width = w->min_width;

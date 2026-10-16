@@ -30,7 +30,7 @@ class PlatformEnvironment final : public IPlatformEnvironment
 {
 private:
     std::string _basePath[DIRBASE_COUNT];
-    IZipArchive * zip;
+    IZipArchive * zip = nullptr;
 
 public:
     explicit PlatformEnvironment(DIRBASE_VALUES basePaths)
@@ -126,6 +126,8 @@ static std::string GetOpenRCT2DirectoryName()
 {
 #if defined(__ANDROID__)
     return "openrct2-user";
+#elif defined(__3DS__)
+    return "";
 #else
     return "OpenRCT2";
 #endif

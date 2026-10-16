@@ -14,7 +14,7 @@
 *****************************************************************************/
 #pragma endregion
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__psp2__)
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__psp2__) || defined(__3DS__)
 
 #include <cstring>
 #include <pwd.h>
@@ -60,8 +60,10 @@ namespace Platform
     std::string GetHomePath()
     {
         std::string path;
-#ifdef __psp2__
+#if defined(__psp2__)
         path = "ux0:data/OpenRCT2";
+#elif defined(__3DS__)
+        path = "sdmc:/3ds/openrct2/user";
 #else
         auto pw = getpwuid(getuid());
         if (pw != nullptr)

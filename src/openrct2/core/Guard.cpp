@@ -80,16 +80,35 @@ namespace Guard
     {
         if (expression) return;
 
+#ifdef __3DS__
+        {
+            char stackBuf[256];
+            stackBuf[0] = '\0';
+            if (message != nullptr)
+            {
+                vsnprintf(stackBuf, sizeof(stackBuf), message, args);
+            }
+            FILE * f = fopen("sdmc:/3ds/openrct2/boot.log", "a");
+            if (f != nullptr)
+            {
+                fprintf(f, "[ASSERT FAIL] %s\n", stackBuf);
+                fclose(f);
+            }
+        }
+#endif
+
         Console::Error::WriteLine(ASSERTION_MESSAGE);
         Console::Error::WriteLine("Version: %s", gVersionInfoFull);
 
         // This is never freed, but acceptable considering we are about to crash out
         utf8 * formattedMessage = nullptr;
+#ifndef __3DS__
         if (message != nullptr)
         {
             formattedMessage = String::Format_VA(message, args);
             Console::Error::WriteLine(formattedMessage);
         }
+#endif
 
 #ifdef DEBUG
         Debug::Break();
