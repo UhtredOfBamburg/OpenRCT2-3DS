@@ -48,20 +48,25 @@ AccessControlInfo:
 
   # Process Settings
   SystemMode              : 64MB
-  SystemModeExt           : 124MB
+  SystemModeExt           : Legacy
   CpuSpeed                : 804MHz
   EnableL2Cache           : true
   ServiceAccessControl:
     - apt:u
     - hid:USER
+    - hid:SPVR
     - gsp::Gpu
     - fs:USER
     - dsp::DSP
     - cfg:u
+    - cfg:s
+    - cfg:i
     - ndm:u
     - soc:U
     - ptm:u
+    - ptm:sysm
     - mic:u
+    - hb:ndsp
   SystemCallAccess:
     sc_01: 0x01
     sc_02: 0x02

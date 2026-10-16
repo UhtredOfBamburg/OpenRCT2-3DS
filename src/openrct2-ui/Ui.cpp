@@ -209,7 +209,6 @@ int main(int argc, const char * * argv)
 {
 #ifdef __3DS__
     osSetSpeedupEnable(true);
-    romfsInit();
     gfxInit(GSP_RGBA8_OES, GSP_RGBA8_OES, false);
     gfxSetDoubleBuffering(GFX_TOP, true);
     gfxSetDoubleBuffering(GFX_BOTTOM, true);
@@ -244,7 +243,6 @@ int main(int argc, const char * * argv)
     }
 #ifdef __3DS__
     gfxExit();
-    romfsExit();
 #endif
     return gExitCode;
 }
